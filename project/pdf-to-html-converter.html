@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDF to HTML Converter</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+  <script>
+    window.addEventListener('load', () => {
+      if (typeof pdfjsLib === 'undefined') {
+        pdfjsLib = window['pdfjsLib'] || window['pdfjs-dist/build/pdf'];
+      }
+      if (typeof pdfjsLib === 'undefined') {
+        console.error('pdfjsLib is not defined. Make sure the PDF.js script is loaded properly.');
+        return;
+      }
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+    });
+  </script>
+</head>
+
+<body class="bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-900 dark:to-gray-800 text-gray-900 dark:text-gray-100 min-h-screen flex items-center justify-center px-4 transition-colors duration-300">
+  <div class="bg-white dark:bg-gray-900 shadow-2xl rounded-2xl p-6 w-full max-w-xl transition-all duration-300 transform hover:scale-[1.02]">
+    <h1 class="text-3xl font-extrabold text-center text-indigo-600 dark:text-indigo-400 mb-4 animate-fade-in">PDF to HTML Converter</h1>
+    <p class="text-center text-gray-600 dark:text-gray-300 mb-6 animate-fade-in">Upload or drag a PDF file to convert it into HTML instantly.</p>
+
+    <div id="dropZone" class="w-full border-2 border-dashed border-indigo-400 p-4 mb-4 text-center text-gray-500 dark:text-gray-300 bg-white dark:bg-gray-800 rounded cursor-pointer transition-all duration-300 ease-in-out hover:bg-indigo-50 dark:hover:bg-indigo-800">
+      Drag and drop a PDF file here or click to select a file below.
+    </div>
+
+    <input type="file" id="pdfInput" accept="application/pdf"
+      class="w-full mb-4 px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-300">
+
+    <button id="convertBtn"
+      class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded mb-4 transition-all duration-300 ease-in-out transform hover:scale-105">Convert to HTML</button>
+
+    <div id="output" class="mt-6 hidden">
+      <h2 class="text-lg font-semibold mb-2 animate-fade-in">Converted HTML:</h2>
+      <textarea id="htmlOutput" rows="10"
+        class="w-full border border-gray-300 dark:border-gray-700 rounded p-2 text-sm font-mono bg-gray-50 dark:bg-gray-800 dark:text-white animate-fade-in"></textarea>
+    </div>
+  </div>
+
+  <script>
+    const input = document.getElementById('pdfInput');
+    const dropZone = document.getElementById('dropZone');
+    const outputContainer = document.getElementById('output');
+    const htmlOutput = document.getElementById('htmlOutput');
+
+    let droppedFile = null;
+
+    async function convertPDF(file) {
+      const reader = new FileReader();
+
+      reader.onload = async function () {
+        try {
+          const pdfData = new Uint8Array(reader.result);
+          const loadingTask = pdfjsLib.getDocument({ data: pdfData });
+          const pdf = await loadingTask.promise;
+          let html = '';
+
+          for (let i = 1; i <= pdf.numPages; i++) {
+            const page = await pdf.getPage(i);
+            const textContent = await page.getTextContent();
+            html += `<h3 class='font-bold text-lg mt-4 mb-2'>Page ${i}</h3><p>`;
+            html += textContent.items.map(item => item.str).join(' ') + '</p>';
+          }
+
+          htmlOutput.value = html;
+          outputContainer.classList.remove('hidden');
+        } catch (error) {
+          alert('Error reading PDF: ' + error.message);
+          console.error(error);
+        }
+      };
+
+      reader.readAsArrayBuffer(file);
+    }
+
+    document.getElementById('convertBtn').addEventListener('click', () => {
+      const file = droppedFile || input.files[0];
+
+      if (!file) {
+        alert('Please upload or drop a PDF file.');
+        return;
+      }
+
+      if (file.type !== 'application/pdf') {
+        alert('Please upload a valid PDF file.');
+        return;
+      }
+
+      if (typeof pdfjsLib === 'undefined') {
+        alert('PDF.js library is not loaded.');
+        return;
+      }
+
+      convertPDF(file);
+    });
+
+    // Drag and Drop Handlers
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('bg-indigo-100', 'dark:bg-indigo-900');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.classList.remove('bg-indigo-100', 'dark:bg-indigo-900');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('bg-indigo-100', 'dark:bg-indigo-900');
+      droppedFile = e.dataTransfer.files[0];
+      input.files = e.dataTransfer;
+    });
+
+    dropZone.addEventListener('click', () => input.click());
+  </script>
+
+  <style>
+    @keyframes fade-in {
+      0% { opacity: 0; transform: translateY(10px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in {
+      animation: fade-in 0.5s ease-out;
+    }
+  </style>
+</body>
+
+</html>

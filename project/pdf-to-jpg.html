@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF to JPG Converter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.12.313/pdf.min.js"></script>
+    <style>
+        .dropzone {
+            transition: all 0.3s ease;
+        }
+        .dropzone.active {
+            border-color: #4f46e5;
+            background-color: #eef2ff;
+        }
+        .progress-bar {
+            transition: width 0.3s ease;
+        }
+        .image-preview {
+            transition: transform 0.2s;
+        }
+        .image-preview:hover {
+            transform: scale(1.03);
+        }
+        #preview-container {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <header class="text-center mb-12">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-2">PDF to JPG Converter</h1>
+            <p class="text-gray-600 max-w-2xl mx-auto">Convert PDF pages to high-quality JPG images</p>
+        </header>
+
+        <main class="max-w-4xl mx-auto">
+            <div class="bg-white rounded-xl shadow-md overflow-hidden p-6 mb-8">
+                <div id="upload-section">
+                    <div class="dropzone border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer mb-6"
+                        id="dropzone">
+                        <div class="flex flex-col items-center justify-center space-y-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                            </svg>
+                            <h3 class="text-lg font-medium text-gray-700">Drag & drop your PDF file here</h3>
+                            <p class="text-sm text-gray-500">or click to browse files</p>
+                            <input type="file" id="file-input" accept=".pdf" class="hidden">
+                            <button id="browse-btn" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
+                                Select PDF File
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-center space-x-4 mb-4">
+                        <div class="flex items-center">
+                            <label for="quality" class="block text-sm text-gray-700 mr-2">Quality:</label>
+                            <select id="quality" class="h-8 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                                <option value="0.7">High (70%)</option>
+                                <option value="0.5" selected>Medium (50%)</option>
+                                <option value="0.3">Low (30%)</option>
+                            </select>
+                        </div>
+                        <div class="flex items-center">
+                            <label for="scale" class="block text-sm text-gray-700 mr-2">Scale:</label>
+                            <select id="scale" class="h-8 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                                <option value="2">2x</option>
+                                <option value="1.5">1.5x</option>
+                                <option value="1" selected>1x</option>
+                                <option value="0.75">0.75x</option>
+                                <option value="0.5">0.5x</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="text-center text-sm text-gray-500">
+                        <p>Supported: PDF files (max file size: 10MB)</p>
+                    </div>
+                </div>
+
+                <div id="processing-section" class="hidden">
+                    <div class="text-center mb-6">
+                        <div class="inline-flex items-center justify-center w-16 h-16 bg-indigo-100 rounded-full mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-indigo-600 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-medium text-gray-700 mb-2">Processing your PDF</h3>
+                        <p class="text-gray-500" id="page-status">Converting page 1...</p>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2.5 mb-6">
+                        <div id="progress-bar" class="progress-bar bg-indigo-600 h-2.5 rounded-full" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div id="result-section" class="hidden">
+                    <div class="text-center mb-6">
+                        <div class="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-medium text-gray-700 mb-2">Conversion Complete!</h3>
+                        <p class="text-gray-500 mb-4" id="result-message">Your JPG images are ready to download.</p>
+                        <button id="download-all-btn" class="px-6 py-3 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors mr-2">
+                            Download All as ZIP
+                        </button>
+                        <button id="download-selected-btn" class="px-6 py-3 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
+                            Download Selected
+                        </button>
+                    </div>
+                    <div class="border rounded-lg overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-2 border-b flex justify-between items-center">
+                            <h4 class="font-medium text-gray-700">Image Previews</h4>
+                            <div class="flex items-center">
+                                <input type="checkbox" id="select-all" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded mr-2">
+                                <label for="select-all" class="text-sm text-gray-700">Select all</label>
+                            </div>
+                        </div>
+                        <div id="preview-container" class="p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                            <!-- Image previews will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+
+                <div id="error-section" class="hidden p-4 bg-red-50 rounded-lg border border-red-200 text-red-700">
+                    <div class="flex items-start">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 mt-0.5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                        </svg>
+                        <div>
+                            <h4 class="font-medium" id="error-title">Error</h4>
+                            <p class="text-sm" id="error-message"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md overflow-hidden p-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">How to use this converter</h2>
+                <ol class="list-decimal list-inside space-y-3 text-gray-700">
+                    <li>Click "Select PDF File" or drag and drop your PDF file into the upload area</li>
+                    <li>Adjust quality and scale settings if needed</li>
+                    <li>Wait for the conversion process to complete</li>
+                    <li>Preview the converted images</li>
+                    <li>Download selected images or all images as a ZIP archive</li>
+                </ol>
+                <div class="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200 text-blue-700">
+                    <div class="flex items-start">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 mt-0.5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                        </svg>
+                        <div>
+                            <p class="text-sm">Note: Higher quality and scale settings will produce larger image files but better quality. For multi-page PDFs, all pages will be converted.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="mt-16 text-center text-gray-500 text-sm">
+            <p>PDF to JPG Converter - Free online tool</p>
+        </footer>
+    </div>
+
+    <script>
+        // Set PDF.js worker path
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.12.313/pdf.worker.min.js';
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM elements
+            const dropzone = document.getElementById('dropzone');
+            const fileInput = document.getElementById('file-input');
+            const browseBtn = document.getElementById('browse-btn');
+            const uploadSection = document.getElementById('upload-section');
+            const processingSection = document.getElementById('processing-section');
+            const resultSection = document.getElementById('result-section');
+            const errorSection = document.getElementById('error-section');
+            const progressBar = document.getElementById('progress-bar');
+            const pageStatus = document.getElementById('page-status');
+            const resultMessage = document.getElementById('result-message');
+            const previewContainer = document.getElementById('preview-container');
+            const downloadAllBtn = document.getElementById('download-all-btn');
+            const downloadSelectedBtn = document.getElementById('download-selected-btn');
+            const selectAllCheckbox = document.getElementById('select-all');
+            const qualitySelect = document.getElementById('quality');
+            const scaleSelect = document.getElementById('scale');
+            
+            // Variables
+            let pdfFile = null;
+            let jpgImages = [];
+            let fileName = '';
+
+            // Event listeners
+            browseBtn.addEventListener('click', () => fileInput.click());
+            fileInput.addEventListener('change', handleFileSelect);
+            
+            // Drag and drop events
+            dropzone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropzone.classList.add('active');
+            });
+
+            dropzone.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                dropzone.classList.remove('active');
+            });
+
+            dropzone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropzone.classList.remove('active');
+                
+                if (e.dataTransfer.files.length) {
+                    handleFileDrop(e.dataTransfer.files);
+                }
+            });
+
+            downloadAllBtn.addEventListener('click', downloadAllAsZip);
+            downloadSelectedBtn.addEventListener('click', downloadSelectedImages);
+            selectAllCheckbox.addEventListener('change', toggleSelectAll);
+
+            // Functions
+            function handleFileSelect(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    validateAndProcessFile(file);
+                }
+            }
+
+            function handleFileDrop(files) {
+                const file = files[0];
+                if (file) {
+                    validateAndProcessFile(file);
+                }
+            }
+
+            function validateAndProcessFile(file) {
+                // Reset UI
+                hideError();
+                
+                // Validate file
+                if (!file.type.match('pdf.*') && !file.name.match(/\.pdf$/i)) {
+                    showError('Invalid File', 'Please upload a PDF file.');
+                    return;
+                }
+                
+                if (file.size > 10 * 1024 * 1024) {
+                    showError('File Too Large', 'Please upload a PDF file smaller than 10MB.');
+                    return;
+                }
+                
+                pdfFile = file;
+                fileName = file.name.replace(/\.pdf$/i, '');
+                processPDF(file);
+            }
+
+            async function processPDF(file) {
+                uploadSection.classList.add('hidden');
+                processingSection.classList.remove('hidden');
+                resultSection.classList.add('hidden');
+                jpgImages = [];
+                
+                try {
+                    // Read the file
+                    const arrayBuffer = await file.arrayBuffer();
+                    
+                    // Load the PDF document
+                    const loadingTask = pdfjsLib.getDocument(arrayBuffer);
+                    const pdf = await loadingTask.promise;
+                    
+                    // Convert each page to JPG
+                    for (let i = 1; i <= pdf.numPages; i++) {
+                        pageStatus.textContent = `Converting page ${i} of ${pdf.numPages}...`;
+                        updateProgress(((i - 1) / pdf.numPages) * 100);
+                        
+                        const page = await pdf.getPage(i);
+                        const viewport = page.getViewport({ scale: parseFloat(scaleSelect.value) });
+                        
+                        // Create canvas for rendering
+                        const canvas = document.createElement('canvas');
+                        const context = canvas.getContext('2d');
+                        canvas.height = viewport.height;
+                        canvas.width = viewport.width;
+                        
+                        // Render PDF page to canvas
+                        await page.render({
+                            canvasContext: context,
+                            viewport: viewport
+                        }).promise;
+                        
+                        // Convert canvas to JPG
+                        const quality = parseFloat(qualitySelect.value);
+                        const imageData = canvas.toDataURL('image/jpeg', quality);
+                        
+                        jpgImages.push({
+                            data: imageData,
+                            pageNumber: i,
+                            selected: true
+                        });
+                    }
+                    
+                    // Complete progress
+                    updateProgress(100);
+                    
+                    // Show results
+                    showResults();
+                    
+                } catch (error) {
+                    console.error('Error processing PDF:', error);
+                    showError('Conversion Failed', 'An error occurred while processing the PDF file.');
+                    resetUI();
+                }
+            }
+
+            function showResults() {
+                processingSection.classList.add('hidden');
+                resultSection.classList.remove('hidden');
+                
+                // Update result message
+                resultMessage.textContent = `Converted ${jpgImages.length} page${jpgImages.length !== 1 ? 's' : ''} to JPG images.`;
+                
+                // Clear previous previews
+                previewContainer.innerHTML = '';
+                
+                // Create image previews
+                jpgImages.forEach((image, index) => {
+                    const previewItem = document.createElement('div');
+                    previewItem.className = 'bg-white rounded-lg overflow-hidden shadow border border-gray-200';
+                    previewItem.innerHTML = `
+                        <div class="p-2 flex items-center justify-between bg-gray-50 border-b">
+                            <span class="text-sm font-medium text-gray-700">Page ${image.pageNumber}</span>
+                            <input type="checkbox" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" 
+                                   id="img-${index}" ${image.selected ? 'checked' : ''}>
+                        </div>
+                        <div class="p-2">
+                            <img src="${image.data}" alt="Page ${image.pageNumber}" class="image-preview w-full h-auto rounded">
+                        </div>
+                    `;
+                    previewContainer.appendChild(previewItem);
+                    
+                    // Add event listener to checkbox
+                    document.getElementById(`img-${index}`).addEventListener('change', (e) => {
+                        jpgImages[index].selected = e.target.checked;
+                    });
+                });
+                
+                // Check select all if all are selected
+                selectAllCheckbox.checked = jpgImages.every(img => img.selected);
+            }
+
+            function toggleSelectAll() {
+                const isChecked = selectAllCheckbox.checked;
+                jpgImages.forEach((img, index) => {
+                    img.selected = isChecked;
+                    const checkbox = document.getElementById(`img-${index}`);
+                    if (checkbox) checkbox.checked = isChecked;
+                });
+            }
+
+            async function downloadAllAsZip() {
+                try {
+                    // Create ZIP (using JSZip from CDN)
+                    const JSZip = await loadJSZip();
+                    const zip = new JSZip();
+                    
+                    // Add all images to ZIP
+                    jpgImages.forEach((img, index) => {
+                        const base64Data = img.data.split(',')[1];
+                        zip.file(`${fileName}_page_${img.pageNumber}.jpg`, base64Data, { base64: true });
+                    });
+                    
+                    // Generate and download ZIP
+                    const content = await zip.generateAsync({ type: 'blob' });
+                    saveAs(content, `${fileName}.zip`);
+                    
+                } catch (error) {
+                    console.error('Error creating ZIP:', error);
+                    showError('Download Failed', 'An error occurred while creating the ZIP file.');
+                }
+            }
+
+            async function downloadSelectedImages() {
+                try {
+                    const selectedImages = jpgImages.filter(img => img.selected);
+                    
+                    if (selectedImages.length === 0) {
+                        showError('No Selection', 'Please select at least one image to download.');
+                        return;
+                    }
+                    
+                    if (selectedImages.length === 1) {
+                        // Single image download
+                        const link = document.createElement('a');
+                        link.href = selectedImages[0].data;
+                        link.download = `${fileName}_page_${selectedImages[0].pageNumber}.jpg`;
+                        link.click();
+                    } else {
+                        // Multiple images - create ZIP
+                        const JSZip = await loadJSZip();
+                        const zip = new JSZip();
+                        
+                        selectedImages.forEach(img => {
+                            const base64Data = img.data.split(',')[1];
+                            zip.file(`${fileName}_page_${img.pageNumber}.jpg`, base64Data, { base64: true });
+                        });
+                        
+                        const content = await zip.generateAsync({ type: 'blob' });
+                        saveAs(content, `${fileName}_selected_pages.zip`);
+                    }
+                    
+                } catch (error) {
+                    console.error('Error downloading images:', error);
+                    showError('Download Failed', 'An error occurred while downloading the images.');
+                }
+            }
+
+            function loadJSZip() {
+                return new Promise((resolve, reject) => {
+                    if (window.JSZip) {
+                        resolve(window.JSZip);
+                    } else {
+                        const script = document.createElement('script');
+                        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+                        script.onload = () => resolve(window.JSZip);
+                        script.onerror = () => reject(new Error('Failed to load JSZip'));
+                        document.head.appendChild(script);
+                    }
+                });
+            }
+
+            function updateProgress(percent) {
+                progressBar.style.width = `${percent}%`;
+            }
+
+            function showError(title, message) {
+                document.getElementById('error-title').textContent = title;
+                document.getElementById('error-message').textContent = message;
+                errorSection.classList.remove('hidden');
+            }
+
+            function hideError() {
+                errorSection.classList.add('hidden');
+            }
+
+            function resetUI() {
+                uploadSection.classList.remove('hidden');
+                processingSection.classList.add('hidden');
+                resultSection.classList.add('hidden');
+                progressBar.style.width = '0%';
+                fileInput.value = '';
+                pdfFile = null;
+                jpgImages = [];
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keyword Density Analyzer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .keyword-row:hover {
+            background-color: #f8fafc;
+        }
+        .density-bar {
+            transition: width 0.5s ease-in-out;
+        }
+        .loading-spinner {
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .highlight {
+            background-color: #ffeb3b;
+            padding: 0 2px;
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <header class="text-center mb-12">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-2">Keyword Density Analyzer</h1>
+            <p class="text-gray-600 max-w-2xl mx-auto">Analyze keyword frequency and density in your text content</p>
+        </header>
+
+        <!-- Main Content -->
+        <div class="max-w-6xl mx-auto">
+            <!-- Input Section -->
+            <div class="bg-white rounded-xl shadow-md overflow-hidden mb-8">
+                <div class="p-6 md:p-8 border-b border-gray-200">
+                    <div class="flex flex-col space-y-6">
+                        <!-- Text Input -->
+                        <div>
+                            <label for="contentInput" class="block text-sm font-medium text-gray-700 mb-2">Paste your content</label>
+                            <textarea 
+                                id="contentInput" 
+                                rows="8" 
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                                placeholder="Paste your article, blog post, or webpage content here..."
+                            ></textarea>
+                        </div>
+                        
+                        <!-- Options -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label for="minWordLength" class="block text-sm font-medium text-gray-700 mb-2">Minimum word length</label>
+                                <select 
+                                    id="minWordLength" 
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                >
+                                    <option value="3">3+ characters</option>
+                                    <option value="4" selected>4+ characters</option>
+                                    <option value="5">5+ characters</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label for="minFrequency" class="block text-sm font-medium text-gray-700 mb-2">Minimum frequency</label>
+                                <select 
+                                    id="minFrequency" 
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                >
+                                    <option value="2">2+ occurrences</option>
+                                    <option value="3" selected>3+ occurrences</option>
+                                    <option value="5">5+ occurrences</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label for="stopWords" class="block text-sm font-medium text-gray-700 mb-2">Filter common words</label>
+                                <select 
+                                    id="stopWords" 
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                >
+                                    <option value="true" selected>Yes</option>
+                                    <option value="false">No</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Analyze Button -->
+                        <div class="flex justify-center">
+                            <button 
+                                id="analyzeBtn" 
+                                class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center min-w-[120px]"
+                            >
+                                <span id="btnText">Analyze</span>
+                                <span id="spinner" class="hidden ml-2">
+                                    <i class="fas fa-spinner loading-spinner"></i>
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            <div id="resultsSection" class="hidden">
+                <!-- Summary Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                        <div class="p-6">
+                            <div class="flex items-center">
+                                <div class="p-3 rounded-full bg-blue-100 mr-4">
+                                    <i class="fas fa-font text-blue-600"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-500">Total Words</p>
+                                    <p id="totalWords" class="text-2xl font-semibold text-gray-800">0</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                        <div class="p-6">
+                            <div class="flex items-center">
+                                <div class="p-3 rounded-full bg-green-100 mr-4">
+                                    <i class="fas fa-key text-green-600"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-500">Unique Keywords</p>
+                                    <p id="uniqueKeywords" class="text-2xl font-semibold text-gray-800">0</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                        <div class="p-6">
+                            <div class="flex items-center">
+                                <div class="p-3 rounded-full bg-purple-100 mr-4">
+                                    <i class="fas fa-chart-pie text-purple-600"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-500">Keyword Density</p>
+                                    <p id="keywordDensity" class="text-2xl font-semibold text-gray-800">0%</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                        <div class="p-6">
+                            <div class="flex items-center">
+                                <div class="p-3 rounded-full bg-yellow-100 mr-4">
+                                    <i class="fas fa-star text-yellow-600"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-500">Top Keyword</p>
+                                    <p id="topKeyword" class="text-2xl font-semibold text-gray-800">-</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Keywords Table -->
+                <div class="bg-white rounded-xl shadow-md overflow-hidden mb-8">
+                    <div class="p-6 md:p-8 border-b border-gray-200 bg-gray-50">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-lg font-semibold text-gray-800">Keyword Analysis</h3>
+                            <div class="flex items-center space-x-2">
+                                <button 
+                                    id="highlightBtn" 
+                                    class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md text-sm flex items-center"
+                                >
+                                    <i class="fas fa-highlighter mr-2"></i>
+                                    Highlight
+                                </button>
+                                <button 
+                                    id="exportBtn" 
+                                    class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm flex items-center"
+                                >
+                                    <i class="fas fa-file-export mr-2"></i>
+                                    Export
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Keyword</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Frequency</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Density</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Distribution</th>
+                                </tr>
+                            </thead>
+                            <tbody id="keywordsTable" class="bg-white divide-y divide-gray-200">
+                                <!-- Will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Content Preview with Highlights -->
+                <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                    <div class="p-6 md:p-8 border-b border-gray-200 bg-gray-50">
+                        <h3 class="text-lg font-semibold text-gray-800">Content Preview with Keyword Highlights</h3>
+                    </div>
+                    <div class="p-6 md:p-8">
+                        <div id="contentPreview" class="prose max-w-none p-4 border border-gray-200 rounded-lg bg-gray-50">
+                            <!-- Will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Instructions -->
+        <div class="max-w-6xl mx-auto mt-8 bg-white rounded-xl shadow-md overflow-hidden p-6 md:p-8">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">How to use this tool</h2>
+            <div class="space-y-4">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0 h-6 w-6 rounded-full bg-blue-100 flex items-center justify-center mt-1 mr-3">
+                        <i class="fas fa-check text-blue-500 text-xs"></i>
+                    </div>
+                    <p class="text-gray-600">Paste your content (article, blog post, or webpage text) into the input box</p>
+                </div>
+                <div class="flex items-start">
+                    <div class="flex-shrink-0 h-6 w-6 rounded-full bg-blue-100 flex items-center justify-center mt-1 mr-3">
+                        <i class="fas fa-check text-blue-500 text-xs"></i>
+                    </div>
+                    <p class="text-gray-600">Adjust the analysis settings if needed (minimum word length, frequency, etc.)</p>
+                </div>
+                <div class="flex items-start">
+                    <div class="flex-shrink-0 h-6 w-6 rounded-full bg-blue-100 flex items-center justify-center mt-1 mr-3">
+                        <i class="fas fa-check text-blue-500 text-xs"></i>
+                    </div>
+                    <p class="text-gray-600">Click "Analyze" to process your content</p>
+                </div>
+                <div class="flex items-start">
+                    <div class="flex-shrink-0 h-6 w-6 rounded-full bg-blue-100 flex items-center justify-center mt-1 mr-3">
+                        <i class="fas fa-check text-blue-500 text-xs"></i>
+                    </div>
+                    <p class="text-gray-600">Review the keyword analysis and highlighted content</p>
+                </div>
+                <div class="flex items-start">
+                    <div class="flex-shrink-0 h-6 w-6 rounded-full bg-blue-100 flex items-center justify-center mt-1 mr-3">
+                        <i class="fas fa-check text-blue-500 text-xs"></i>
+                    </div>
+                    <p class="text-gray-600">Export results or highlight keywords in your text</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="mt-12 text-center text-gray-500 text-sm">
+            <p>Keyword Density Analyzer &copy; 2023 | All rights reserved</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM Elements
+            const contentInput = document.getElementById('contentInput');
+            const minWordLength = document.getElementById('minWordLength');
+            const minFrequency = document.getElementById('minFrequency');
+            const stopWords = document.getElementById('stopWords');
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            const btnText = document.getElementById('btnText');
+            const spinner = document.getElementById('spinner');
+            const resultsSection = document.getElementById('resultsSection');
+            const totalWords = document.getElementById('totalWords');
+            const uniqueKeywords = document.getElementById('uniqueKeywords');
+            const keywordDensity = document.getElementById('keywordDensity');
+            const topKeyword = document.getElementById('topKeyword');
+            const keywordsTable = document.getElementById('keywordsTable');
+            const contentPreview = document.getElementById('contentPreview');
+            const highlightBtn = document.getElementById('highlightBtn');
+            const exportBtn = document.getElementById('exportBtn');
+
+            // Common English stop words to filter out
+            const STOP_WORDS = new Set([
+                'a', 'an', 'and', 'are', 'as', 'at', 'be', 'but', 'by', 'for', 'if', 'in', 
+                'into', 'is', 'it', 'no', 'not', 'of', 'on', 'or', 'such', 'that', 'the', 
+                'their', 'then', 'there', 'these', 'they', 'this', 'to', 'was', 'will', 'with'
+            ]);
+
+            // Event Listeners
+            analyzeBtn.addEventListener('click', analyzeContent);
+            highlightBtn.addEventListener('click', toggleHighlight);
+            exportBtn.addEventListener('click', exportResults);
+
+            // Analyze content
+            function analyzeContent() {
+                const text = contentInput.value.trim();
+                
+                if (!text) {
+                    alert('Please enter some content to analyze');
+                    return;
+                }
+                
+                try {
+                    // Show loading state
+                    btnText.textContent = 'Analyzing...';
+                    spinner.classList.remove('hidden');
+                    analyzeBtn.disabled = true;
+                    
+                    // Process the content
+                    const words = processText(text);
+                    const wordCount = words.length;
+                    const keywordData = analyzeKeywords(words);
+                    
+                    // Display results
+                    displayResults(wordCount, keywordData);
+                    displayContentPreview(text, keywordData.keywords);
+                    
+                    // Show results section
+                    resultsSection.classList.remove('hidden');
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('An error occurred while analyzing the content');
+                } finally {
+                    // Reset button state
+                    btnText.textContent = 'Analyze';
+                    spinner.classList.add('hidden');
+                    analyzeBtn.disabled = false;
+                }
+            }
+            
+            // Process text content
+            function processText(text) {
+                // Remove HTML tags if any
+                text = text.replace(/<[^>]*>/g, ' ');
+                
+                // Convert to lowercase and split into words
+                let words = text.toLowerCase()
+                    .replace(/[^\w\s]/g, ' ')  // Remove punctuation
+                    .split(/\s+/);              // Split by whitespace
+                
+                // Filter words by length
+                const minLength = parseInt(minWordLength.value);
+                words = words.filter(word => word.length >= minLength);
+                
+                // Filter stop words if enabled
+                if (stopWords.value === 'true') {
+                    words = words.filter(word => !STOP_WORDS.has(word));
+                }
+                
+                return words;
+            }
+            
+            // Analyze keywords and calculate frequencies
+            function analyzeKeywords(words) {
+                const frequencyMap = {};
+                const wordCount = words.length;
+                
+                // Count word frequencies
+                words.forEach(word => {
+                    frequencyMap[word] = (frequencyMap[word] || 0) + 1;
+                });
+                
+                // Convert to array and filter by minimum frequency
+                const minFreq = parseInt(minFrequency.value);
+                let keywords = Object.entries(frequencyMap)
+                    .filter(([word, count]) => count >= minFreq)
+                    .map(([word, count]) => ({
+                        word,
+                        count,
+                        density: (count / wordCount * 100).toFixed(2)
+                    }));
+                
+                // Sort by frequency (descending)
+                keywords.sort((a, b) => b.count - a.count);
+                
+                return {
+                    keywords,
+                    totalWords: wordCount,
+                    uniqueKeywords: keywords.length
+                };
+            }
+            
+            // Display analysis results
+            function displayResults(wordCount, keywordData) {
+                totalWords.textContent = wordCount.toLocaleString();
+                uniqueKeywords.textContent = keywordData.uniqueKeywords.toLocaleString();
+                
+                // Calculate overall keyword density
+                const totalKeywordOccurrences = keywordData.keywords.reduce((sum, kw) => sum + kw.count, 0);
+                const overallDensity = (totalKeywordOccurrences / wordCount * 100).toFixed(2);
+                keywordDensity.textContent = `${overallDensity}%`;
+                
+                // Set top keyword
+                topKeyword.textContent = keywordData.keywords.length > 0 
+                    ? `${keywordData.keywords[0].word} (${keywordData.keywords[0].count})` 
+                    : '-';
+                
+                // Populate keywords table
+                keywordsTable.innerHTML = '';
+                keywordData.keywords.forEach(keyword => {
+                    const row = document.createElement('tr');
+                    row.className = 'keyword-row';
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900">${keyword.word}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-gray-500">${keyword.count}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-gray-500">${keyword.density}%</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                <div class="density-bar h-2.5 rounded-full bg-blue-600" 
+                                     style="width: ${Math.min(100, parseFloat(keyword.density) * 3)}%"></div>
+                            </div>
+                        </td>
+                    `;
+                    keywordsTable.appendChild(row);
+                });
+            }
+            
+            // Display content preview with keyword highlights
+            function displayContentPreview(text, keywords) {
+                // Create a copy of the original text
+                let previewText = text;
+                
+                // Sort keywords by length (longest first) to avoid partial highlighting
+                const sortedKeywords = [...keywords].sort((a, b) => b.word.length - a.word.length);
+                
+                // Highlight keywords in the text
+                sortedKeywords.forEach(keyword => {
+                    const regex = new RegExp(`\\b${keyword.word}\\b`, 'gi');
+                    previewText = previewText.replace(regex, match => 
+                        `<span class="highlight" data-keyword="${keyword.word.toLowerCase()}">${match}</span>`
+                    );
+                });
+                
+                // Preserve line breaks and basic formatting
+                previewText = previewText.replace(/\n/g, '<br>');
+                
+                // Set the preview content
+                contentPreview.innerHTML = previewText;
+            }
+            
+            // Toggle keyword highlights
+            function toggleHighlight() {
+                const highlights = contentPreview.querySelectorAll('.highlight');
+                const isHighlighted = highlights.length > 0 && 
+                    window.getComputedStyle(highlights[0]).backgroundColor !== 'rgba(0, 0, 0, 0)';
+                
+                if (isHighlighted) {
+                    // Remove highlights
+                    highlights.forEach(hl => {
+                        hl.replaceWith(hl.textContent);
+                    });
+                    highlightBtn.innerHTML = '<i class="fas fa-highlighter mr-2"></i> Highlight';
+                } else {
+                    // Re-apply highlights
+                    displayContentPreview(contentInput.value, 
+                        Array.from(keywordsTable.querySelectorAll('tr')).map(row => ({
+                            word: row.cells[0].textContent,
+                            count: parseInt(row.cells[1].textContent)
+                        }))
+                    );
+                    highlightBtn.innerHTML = '<i class="fas fa-eye-slash mr-2"></i> Hide';
+                }
+            }
+            
+            // Export results to CSV
+            function exportResults() {
+                const rows = Array.from(keywordsTable.querySelectorAll('tr')).map(row => ({
+                    keyword: row.cells[0].textContent,
+                    frequency: row.cells[1].textContent,
+                    density: row.cells[2].textContent
+                }));
+                
+                let csvContent = "Keyword,Frequency,Density(%)\n";
+                rows.forEach(row => {
+                    csvContent += `"${row.keyword}",${row.frequency},${row.density}\n`;
+                });
+                
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.setAttribute('download', 'keyword-analysis.csv');
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        });
+    </script>
+</body>
+</html>

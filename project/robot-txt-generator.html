@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Robots.txt Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .user-agent-card {
+            transition: all 0.2s ease;
+        }
+        .user-agent-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .rule-item {
+            animation: fadeIn 0.3s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <header class="text-center mb-12">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-2">Robots.txt Generator</h1>
+            <p class="text-gray-600 max-w-2xl mx-auto">Create a custom robots.txt file to control search engine crawlers</p>
+        </header>
+
+        <!-- Main Content -->
+        <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-md overflow-hidden">
+            <!-- Generator Form -->
+            <div class="p-6 md:p-8 border-b border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-800 mb-6">Configure Your Robots.txt</h2>
+                
+                <!-- Sitemap URL -->
+                <div class="mb-6">
+                    <label for="sitemapUrl" class="block text-sm font-medium text-gray-700 mb-2">Sitemap URL (optional)</label>
+                    <input 
+                        type="url" 
+                        id="sitemapUrl" 
+                        placeholder="https://example.com/sitemap.xml" 
+                        class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                </div>
+                
+                <!-- User Agents Section -->
+                <div class="mb-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-medium text-gray-700">User Agents</h3>
+                        <button 
+                            id="addUserAgent" 
+                            class="px-3 py-1 bg-blue-50 text-blue-600 rounded-md text-sm hover:bg-blue-100 flex items-center"
+                        >
+                            <i class="fas fa-plus mr-1"></i> Add Agent
+                        </button>
+                    </div>
+                    
+                    <div id="userAgentsContainer" class="space-y-4">
+                        <!-- Default user agent card -->
+                        <div class="user-agent-card bg-gray-50 p-4 rounded-lg border border-gray-200">
+                            <div class="flex justify-between items-start mb-3">
+                                <div class="w-full mr-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">User-agent</label>
+                                    <select class="user-agent-select w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
+                                        <option value="*">All crawlers (*)</option>
+                                        <option value="Googlebot">Googlebot</option>
+                                        <option value="Googlebot-Image">Googlebot-Image</option>
+                                        <option value="Googlebot-News">Googlebot-News</option>
+                                        <option value="Googlebot-Video">Googlebot-Video</option>
+                                        <option value="Bingbot">Bingbot</option>
+                                        <option value="Slurp">Yahoo! Slurp</option>
+                                        <option value="DuckDuckBot">DuckDuckBot</option>
+                                        <option value="Baiduspider">Baiduspider</option>
+                                        <option value="YandexBot">YandexBot</option>
+                                        <option value="custom">Custom...</option>
+                                    </select>
+                                </div>
+                                <button class="remove-agent-btn px-2 py-1 text-gray-500 hover:text-red-500">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            
+                            <div class="agent-rules space-y-3">
+                                <div class="rule-item flex items-center">
+                                    <select class="rule-type w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm mr-2">
+                                        <option value="Allow">Allow</option>
+                                        <option value="Disallow">Disallow</option>
+                                        <option value="Crawl-delay">Crawl-delay</option>
+                                    </select>
+                                    <input 
+                                        type="text" 
+                                        placeholder="/path or value" 
+                                        class="rule-value flex-grow px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                                    >
+                                    <button class="remove-rule-btn ml-2 px-2 py-1 text-gray-500 hover:text-red-500">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <button class="add-rule-btn mt-3 px-3 py-1 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 flex items-center">
+                                <i class="fas fa-plus mr-1"></i> Add Rule
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Generate Button -->
+                <div class="flex justify-center">
+                    <button 
+                        id="generateBtn" 
+                        class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center"
+                    >
+                        <i class="fas fa-robot mr-2"></i> Generate Robots.txt
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Results Section -->
+            <div id="resultsSection" class="hidden p-6 md:p-8 bg-gray-50">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold text-gray-800">Your Robots.txt File</h3>
+                    <div class="flex space-x-2">
+                        <button 
+                            id="copyBtn" 
+                            class="px-4 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center"
+                        >
+                            <i class="fas fa-copy mr-2"></i> Copy
+                        </button>
+                        <button 
+                            id="downloadBtn" 
+                            class="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 flex items-center"
+                        >
+                            <i class="fas fa-download mr-2"></i> Download
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="bg-white p-4 rounded-md border border-gray-200">
+                    <pre id="robotsOutput" class="text-sm text-gray-800 overflow-x-auto"></pre>
+                </div>
+                
+                <div class="mt-4 text-sm text-gray-500">
+                    <p>Place this file in the root directory of your website (e.g., https://example.com/robots.txt)</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Instructions -->
+        <div class="max-w-4xl mx-auto mt-8 bg-white rounded-xl shadow-md overflow-hidden p-6 md:p-8">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">How to use this tool</h2>
+            <div class="space-y-4">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0 h-6 w-6 rounded-full bg-blue-100 flex items-center justify-center mt-1 mr-3">
+                        <i class="fas fa-check text-blue-500 text-xs"></i>
+                    </div>
+                    <p class="text-gray-600">Add user agents (search engine crawlers) you want to configure</p>
+                </div>
+                <div class="flex items-start">
+                    <div class="flex-shrink-0 h-6 w-6 rounded-full bg-blue-100 flex items-center justify-center mt-1 mr-3">
+                        <i class="fas fa-check text-blue-500 text-xs"></i>
+                    </div>
+                    <p class="text-gray-600">Set rules for each user agent (Allow/Disallow paths, crawl delay)</p>
+                </div>
+                <div class="flex items-start">
+                    <div class="flex-shrink-0 h-6 w-6 rounded-full bg-blue-100 flex items-center justify-center mt-1 mr-3">
+                        <i class="fas fa-check text-blue-500 text-xs"></i>
+                    </div>
+                    <p class="text-gray-600">Optionally add your sitemap URL</p>
+                </div>
+                <div class="flex items-start">
+                    <div class="flex-shrink-0 h-6 w-6 rounded-full bg-blue-100 flex items-center justify-center mt-1 mr-3">
+                        <i class="fas fa-check text-blue-500 text-xs"></i>
+                    </div>
+                    <p class="text-gray-600">Generate, copy, and download your custom robots.txt file</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="mt-12 text-center text-gray-500 text-sm">
+            <p>Robots.txt Generator &copy; 2023 | All rights reserved</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM Elements
+            const addUserAgentBtn = document.getElementById('addUserAgent');
+            const userAgentsContainer = document.getElementById('userAgentsContainer');
+            const generateBtn = document.getElementById('generateBtn');
+            const resultsSection = document.getElementById('resultsSection');
+            const robotsOutput = document.getElementById('robotsOutput');
+            const copyBtn = document.getElementById('copyBtn');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const sitemapUrl = document.getElementById('sitemapUrl');
+            
+            // Add new user agent
+            addUserAgentBtn.addEventListener('click', addUserAgent);
+            
+            // Generate robots.txt
+            generateBtn.addEventListener('click', generateRobotsTxt);
+            
+            // Copy to clipboard
+            copyBtn.addEventListener('click', copyToClipboard);
+            
+            // Download file
+            downloadBtn.addEventListener('click', downloadRobotsTxt);
+            
+            // Event delegation for dynamic elements
+            userAgentsContainer.addEventListener('click', function(e) {
+                // Remove agent
+                if (e.target.closest('.remove-agent-btn')) {
+                    const agentCard = e.target.closest('.user-agent-card');
+                    if (userAgentsContainer.children.length > 1) {
+                        agentCard.remove();
+                    } else {
+                        alert('You need at least one user agent configuration');
+                    }
+                }
+                
+                // Add rule
+                if (e.target.closest('.add-rule-btn')) {
+                    const rulesContainer = e.target.closest('.user-agent-card').querySelector('.agent-rules');
+                    addRule(rulesContainer);
+                }
+                
+                // Remove rule
+                if (e.target.closest('.remove-rule-btn')) {
+                    const ruleItem = e.target.closest('.rule-item');
+                    const rulesContainer = ruleItem.parentElement;
+                    if (rulesContainer.children.length > 1) {
+                        ruleItem.remove();
+                    } else {
+                        alert('You need at least one rule per user agent');
+                    }
+                }
+                
+                // Handle custom user agent input
+                if (e.target.classList.contains('user-agent-select') && e.target.value === 'custom') {
+                    const select = e.target;
+                    const customInput = document.createElement('input');
+                    customInput.type = 'text';
+                    customInput.placeholder = 'Enter custom user-agent';
+                    customInput.className = 'w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm';
+                    customInput.value = '';
+                    
+                    select.replaceWith(customInput);
+                    customInput.focus();
+                    
+                    customInput.addEventListener('blur', function() {
+                        if (this.value.trim()) {
+                            const newSelect = document.createElement('select');
+                            newSelect.className = 'user-agent-select w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm';
+                            newSelect.innerHTML = `
+                                <option value="*">All crawlers (*)</option>
+                                <option value="Googlebot">Googlebot</option>
+                                <option value="Googlebot-Image">Googlebot-Image</option>
+                                <option value="Googlebot-News">Googlebot-News</option>
+                                <option value="Googlebot-Video">Googlebot-Video</option>
+                                <option value="Bingbot">Bingbot</option>
+                                <option value="Slurp">Yahoo! Slurp</option>
+                                <option value="DuckDuckBot">DuckDuckBot</option>
+                                <option value="Baiduspider">Baiduspider</option>
+                                <option value="YandexBot">YandexBot</option>
+                                <option value="custom" selected>Custom: ${this.value}</option>
+                            `;
+                            this.replaceWith(newSelect);
+                        } else {
+                            const newSelect = document.createElement('select');
+                            newSelect.className = 'user-agent-select w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm';
+                            newSelect.innerHTML = `
+                                <option value="*">All crawlers (*)</option>
+                                <option value="Googlebot">Googlebot</option>
+                                <option value="Googlebot-Image">Googlebot-Image</option>
+                                <option value="Googlebot-News">Googlebot-News</option>
+                                <option value="Googlebot-Video">Googlebot-Video</option>
+                                <option value="Bingbot">Bingbot</option>
+                                <option value="Slurp">Yahoo! Slurp</option>
+                                <option value="DuckDuckBot">DuckDuckBot</option>
+                                <option value="Baiduspider">Baiduspider</option>
+                                <option value="YandexBot">YandexBot</option>
+                                <option value="custom">Custom...</option>
+                            `;
+                            this.replaceWith(newSelect);
+                        }
+                    });
+                }
+            });
+            
+            // Functions
+            function addUserAgent() {
+                const newAgent = document.createElement('div');
+                newAgent.className = 'user-agent-card bg-gray-50 p-4 rounded-lg border border-gray-200';
+                newAgent.innerHTML = `
+                    <div class="flex justify-between items-start mb-3">
+                        <div class="w-full mr-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">User-agent</label>
+                            <select class="user-agent-select w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
+                                <option value="*">All crawlers (*)</option>
+                                <option value="Googlebot">Googlebot</option>
+                                <option value="Googlebot-Image">Googlebot-Image</option>
+                                <option value="Googlebot-News">Googlebot-News</option>
+                                <option value="Googlebot-Video">Googlebot-Video</option>
+                                <option value="Bingbot">Bingbot</option>
+                                <option value="Slurp">Yahoo! Slurp</option>
+                                <option value="DuckDuckBot">DuckDuckBot</option>
+                                <option value="Baiduspider">Baiduspider</option>
+                                <option value="YandexBot">YandexBot</option>
+                                <option value="custom">Custom...</option>
+                            </select>
+                        </div>
+                        <button class="remove-agent-btn px-2 py-1 text-gray-500 hover:text-red-500">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="agent-rules space-y-3">
+                        <div class="rule-item flex items-center">
+                            <select class="rule-type w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm mr-2">
+                                <option value="Allow">Allow</option>
+                                <option value="Disallow">Disallow</option>
+                                <option value="Crawl-delay">Crawl-delay</option>
+                            </select>
+                            <input 
+                                type="text" 
+                                placeholder="/path or value" 
+                                class="rule-value flex-grow px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                            >
+                            <button class="remove-rule-btn ml-2 px-2 py-1 text-gray-500 hover:text-red-500">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <button class="add-rule-btn mt-3 px-3 py-1 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-gray-200 flex items-center">
+                        <i class="fas fa-plus mr-1"></i> Add Rule
+                    </button>
+                `;
+                userAgentsContainer.appendChild(newAgent);
+            }
+            
+            function addRule(container) {
+                const newRule = document.createElement('div');
+                newRule.className = 'rule-item flex items-center';
+                newRule.innerHTML = `
+                    <select class="rule-type w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm mr-2">
+                        <option value="Allow">Allow</option>
+                        <option value="Disallow">Disallow</option>
+                        <option value="Crawl-delay">Crawl-delay</option>
+                    </select>
+                    <input 
+                        type="text" 
+                        placeholder="/path or value" 
+                        class="rule-value flex-grow px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    >
+                    <button class="remove-rule-btn ml-2 px-2 py-1 text-gray-500 hover:text-red-500">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                container.appendChild(newRule);
+            }
+            
+            function generateRobotsTxt() {
+                let robotsTxt = '';
+                
+                // Process each user agent
+                const agentCards = userAgentsContainer.querySelectorAll('.user-agent-card');
+                agentCards.forEach(card => {
+                    // Get user agent
+                    const agentSelect = card.querySelector('.user-agent-select');
+                    let agentValue;
+                    
+                    if (agentSelect) {
+                        agentValue = agentSelect.value;
+                    } else {
+                        // Handle custom input case
+                        const customInput = card.querySelector('input[type="text"]');
+                        agentValue = customInput ? customInput.value.trim() : '*';
+                    }
+                    
+                    if (agentValue === 'custom') {
+                        // Extract custom value from select option text
+                        const option = card.querySelector('.user-agent-select option[value="custom"]');
+                        agentValue = option ? option.textContent.replace('Custom: ', '') : '*';
+                    }
+                    
+                    robotsTxt += `User-agent: ${agentValue}\n`;
+                    
+                    // Process rules
+                    const rules = card.querySelectorAll('.rule-item');
+                    rules.forEach(rule => {
+                        const type = rule.querySelector('.rule-type').value;
+                        const value = rule.querySelector('.rule-value').value.trim();
+                        
+                        if (value) {
+                            robotsTxt += `${type}: ${value}\n`;
+                        }
+                    });
+                    
+                    robotsTxt += '\n';
+                });
+                
+                // Add sitemap if provided
+                if (sitemapUrl.value.trim()) {
+                    robotsTxt += `Sitemap: ${sitemapUrl.value.trim()}\n`;
+                }
+                
+                // Display results
+                robotsOutput.textContent = robotsTxt;
+                resultsSection.classList.remove('hidden');
+                
+                // Scroll to results
+                resultsSection.scrollIntoView({ behavior: 'smooth' });
+            }
+            
+            function copyToClipboard() {
+                navigator.clipboard.writeText(robotsOutput.textContent).then(() => {
+                    copyBtn.innerHTML = '<i class="fas fa-check mr-2"></i> Copied!';
+                    setTimeout(() => {
+                        copyBtn.innerHTML = '<i class="fas fa-copy mr-2"></i> Copy';
+                    }, 2000);
+                });
+            }
+            
+            function downloadRobotsTxt() {
+                const blob = new Blob([robotsOutput.textContent], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'robots.txt';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+        });
+    </script>
+</body>
+</html>

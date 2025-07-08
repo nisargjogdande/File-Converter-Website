@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Free online XML Sitemap Generator for SEO. Create SEO-friendly sitemaps instantly to improve search engine crawling and indexing of your website.">
+    <meta name="keywords" content="XML sitemap, sitemap generator, SEO tool, search engine optimization, website indexing, Google sitemap, Bing sitemap, crawl website, SEO improvement">
+    <title>Advanced XML Sitemap Generator | SEO Optimization Tool</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --primary-dark: #3a56d4;
+            --secondary: #3f37c9;
+            --accent: #4895ef;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.6s ease-out forwards;
+        }
+        
+        .animate-pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(-45deg, #4361ee, #3f37c9, #4895ef, #4cc9f0);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+        }
+        
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .tooltip .tooltip-text {
+            visibility: hidden;
+            width: 220px;
+            background-color: #1f2937;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 8px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        .loading-spinner {
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .url-item:hover {
+            background-color: #f8fafc;
+            transform: translateX(5px);
+            transition: all 0.2s ease;
+        }
+        
+        .xml-code {
+            font-family: 'Courier New', Courier, monospace;
+            tab-size: 2;
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0,0,0,0.1);
+        }
+        
+        .seo-score {
+            transition: all 0.5s ease-out;
+        }
+        
+        .progress-bar {
+            transition: width 1s ease-in-out;
+        }
+        
+        .flip-in {
+            animation: flipIn 0.6s ease-out forwards;
+        }
+        
+        @keyframes flipIn {
+            from { opacity: 0; transform: perspective(400px) rotateY(90deg); }
+            to { opacity: 1; transform: perspective(400px) rotateY(0); }
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(67, 97, 238, 0.3);
+        }
+        
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+        
+        .input-focus:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(72, 149, 239, 0.2);
+        }
+        
+        .seo-pill {
+            transition: all 0.3s ease;
+        }
+        
+        .seo-pill:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .glow {
+            box-shadow: 0 0 15px rgba(72, 149, 239, 0.3);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Header with gradient -->
+    <header class="gradient-bg text-white py-6 shadow-lg">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-white/20 p-3 rounded-full animate-float">
+                        <i class="fas fa-sitemap text-white text-2xl"></i>
+                    </div>
+                    <h1 class="text-2xl font-bold">Advanced <span class="font-light">XML Sitemap Generator</span></h1>
+                </div>
+                <div class="hidden md:flex items-center space-x-4">
+                    <a href="#features" class="text-white/90 hover:text-white transition">Features</a>
+                    <a href="#how-it-works" class="text-white/90 hover:text-white transition">How It Works</a>
+                    <a href="#seo-tips" class="text-white/90 hover:text-white transition">SEO Tips</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container mx-auto px-4 py-8">
+        <!-- Hero Section -->
+        <section class="text-center mb-12 animate-fade-in">
+            <div class="max-w-3xl mx-auto">
+                <div class="flex justify-center mb-6">
+                    <div class="bg-white/20 p-4 rounded-full backdrop-blur-sm animate-pulse">
+                        <i class="fas fa-rocket text-white text-5xl"></i>
+                    </div>
+                </div>
+                <h1 class="text-4xl font-bold text-gray-800 mb-4">Boost Your SEO with a Perfect XML Sitemap</h1>
+                <p class="text-xl text-gray-600 mb-8">Create SEO-optimized XML sitemaps to help search engines crawl and index your website more effectively.</p>
+                
+                <div class="bg-white rounded-xl shadow-lg p-6 max-w-2xl mx-auto card-hover">
+                    <div class="mb-6">
+                        <label for="website-url" class="block text-sm font-medium text-gray-700 mb-2 text-left">
+                            Enter Your Website URL
+                            <span class="text-red-500">*</span>
+                            <span class="tooltip ml-1">
+                                <i class="fas fa-info-circle text-gray-400"></i>
+                                <span class="tooltip-text">Enter your website's base URL (e.g., https://yourwebsite.com). We'll crawl your site to discover all pages.</span>
+                            </span>
+                        </label>
+                        <div class="flex">
+                            <input 
+                                type="url" 
+                                id="website-url" 
+                                placeholder="https://example.com" 
+                                class="flex-1 px-4 py-3 border border-gray-300 rounded-l-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition input-focus"
+                                required
+                            >
+                            <button 
+                                id="crawl-btn" 
+                                class="btn-primary text-white px-6 py-3 rounded-r-lg font-medium flex items-center justify-center min-w-32"
+                            >
+                                <span id="crawl-text">Generate Sitemap</span>
+                                <div id="crawl-spinner" class="loading-spinner ml-2 hidden"></div>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-blue-50 p-3 rounded-lg border border-blue-100">
+                            <div class="flex items-center">
+                                <div class="bg-blue-100 p-2 rounded-full mr-3">
+                                    <i class="fas fa-bolt text-blue-600"></i>
+                                </div>
+                                <span class="text-sm font-medium text-gray-700">Fast Crawling</span>
+                            </div>
+                        </div>
+                        <div class="bg-green-50 p-3 rounded-lg border border-green-100">
+                            <div class="flex items-center">
+                                <div class="bg-green-100 p-2 rounded-full mr-3">
+                                    <i class="fas fa-lock text-green-600"></i>
+                                </div>
+                                <span class="text-sm font-medium text-gray-700">Secure Processing</span>
+                            </div>
+                        </div>
+                        <div class="bg-purple-50 p-3 rounded-lg border border-purple-100">
+                            <div class="flex items-center">
+                                <div class="bg-purple-100 p-2 rounded-full mr-3">
+                                    <i class="fas fa-search text-purple-600"></i>
+                                </div>
+                                <span class="text-sm font-medium text-gray-700">SEO Optimized</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Content -->
+        <main class="max-w-6xl mx-auto">
+            <!-- Options Section -->
+            <div id="options-section" class="hidden animate-fade-in">
+                <div class="bg-white rounded-xl shadow-lg p-6 mb-8 card-hover">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                        <i class="fas fa-cog text-blue-500 mr-2"></i> Sitemap Configuration
+                    </h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                            <h3 class="text-lg font-medium text-gray-700 mb-3">Metadata Options</h3>
+                            <div class="space-y-4">
+                                <label class="flex items-start">
+                                    <input type="checkbox" id="include-lastmod" class="rounded text-blue-600 focus:ring-blue-500 mt-1" checked>
+                                    <div class="ml-3">
+                                        <span class="text-sm font-medium text-gray-700">Last Modified Date</span>
+                                        <p class="text-xs text-gray-500">Include when each page was last updated (recommended for SEO)</p>
+                                    </div>
+                                </label>
+                                <label class="flex items-start">
+                                    <input type="checkbox" id="include-priority" class="rounded text-blue-600 focus:ring-blue-500 mt-1">
+                                    <div class="ml-3">
+                                        <span class="text-sm font-medium text-gray-700">Priority</span>
+                                        <p class="text-xs text-gray-500">Set priority for important pages (0.0 to 1.0)</p>
+                                    </div>
+                                </label>
+                                <label class="flex items-start">
+                                    <input type="checkbox" id="include-changefreq" class="rounded text-blue-600 focus:ring-blue-500 mt-1">
+                                    <div class="ml-3">
+                                        <span class="text-sm font-medium text-gray-700">Change Frequency</span>
+                                        <p class="text-xs text-gray-500">How often pages are likely to change</p>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="text-lg font-medium text-gray-700 mb-3">Advanced Settings</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <label for="changefreq" class="block text-sm font-medium text-gray-700 mb-1">
+                                        Default Change Frequency
+                                    </label>
+                                    <select id="changefreq" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 input-focus">
+                                        <option value="weekly">Weekly</option>
+                                        <option value="daily">Daily</option>
+                                        <option value="monthly">Monthly</option>
+                                        <option value="yearly">Yearly</option>
+                                        <option value="always">Always</option>
+                                        <option value="never">Never</option>
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label for="priority-value" class="block text-sm font-medium text-gray-700 mb-1">
+                                        Default Priority
+                                    </label>
+                                    <input type="range" id="priority-value" min="0" max="10" value="5" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                                    <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                        <span>0.0 (Low)</span>
+                                        <span id="priority-display">0.5</span>
+                                        <span>1.0 (High)</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="pt-2">
+                                    <label class="flex items-start">
+                                        <input type="checkbox" id="exclude-pdfs" class="rounded text-blue-600 focus:ring-blue-500 mt-1">
+                                        <div class="ml-3">
+                                            <span class="text-sm font-medium text-gray-700">Exclude PDFs</span>
+                                            <p class="text-xs text-gray-500">Skip PDF documents from your sitemap</p>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            <div id="results-section" class="hidden animate-fade-in">
+                <!-- SEO Score Card -->
+                <div class="bg-white rounded-xl shadow-lg p-6 mb-6 card-hover">
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                        <div class="mb-4 md:mb-0">
+                            <h2 class="text-xl font-semibold text-gray-800 mb-2">SEO Score</h2>
+                            <p class="text-sm text-gray-600">Based on your sitemap configuration and URL count</p>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="relative">
+                                <svg class="w-24 h-24" viewBox="0 0 36 36">
+                                    <path d="M18 2.0845
+                                      a 15.9155 15.9155 0 0 1 0 31.831
+                                      a 15.9155 15.9155 0 0 1 0 -31.831"
+                                      fill="none"
+                                      stroke="#e6e6e6"
+                                      stroke-width="3"
+                                      stroke-dasharray="100, 100"
+                                    />
+                                    <path d="M18 2.0845
+                                      a 15.9155 15.9155 0 0 1 0 31.831
+                                      a 15.9155 15.9155 0 0 1 0 -31.831"
+                                      fill="none"
+                                      stroke="#3f37c9"
+                                      stroke-width="3"
+                                      stroke-dasharray="78, 100"
+                                      id="seo-progress"
+                                    />
+                                </svg>
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <span id="seo-score" class="text-2xl font-bold text-gray-800">78</span>
+                                    <span class="text-xl font-bold text-gray-800">/100</span>
+                                </div>
+                            </div>
+                            <div class="ml-6">
+                                <div class="flex items-center mb-2">
+                                    <div class="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
+                                    <span class="text-sm text-gray-700">Good URL count</span>
+                                </div>
+                                <div class="flex items-center mb-2">
+                                    <div class="w-3 h-3 rounded-full bg-yellow-500 mr-2"></div>
+                                    <span class="text-sm text-gray-700">Add more metadata</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <div class="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
+                                    <span class="text-sm text-gray-700">Valid URLs</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- URL List Card -->
+                <div class="bg-white rounded-xl shadow-lg p-6 mb-6 card-hover flip-in">
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
+                        <h2 class="text-xl font-semibold text-gray-800 mb-2 md:mb-0">
+                            <i class="fas fa-link text-blue-500 mr-2"></i> Discovered URLs
+                            <span id="url-count" class="text-sm font-normal text-gray-500 ml-2">(6 pages)</span>
+                        </h2>
+                        <div class="flex space-x-2">
+                            <button id="select-all" class="text-sm bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 py-1 rounded-lg transition flex items-center">
+                                <i class="fas fa-check-circle mr-1"></i> Select All
+                            </button>
+                            <button id="deselect-all" class="text-sm bg-gray-50 text-gray-600 hover:bg-gray-100 px-3 py-1 rounded-lg transition flex items-center">
+                                <i class="fas fa-times-circle mr-1"></i> Deselect All
+                            </button>
+                            <button id="filter-btn" class="text-sm bg-gray-50 text-gray-600 hover:bg-gray-100 px-3 py-1 rounded-lg transition flex items-center">
+                                <i class="fas fa-filter mr-1"></i> Filter
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="border border-gray-200 rounded-lg overflow-hidden">
+                        <div id="url-list" class="max-h-96 overflow-y-auto divide-y divide-gray-200">
+                            <!-- URLs will be added here by JavaScript -->
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 flex justify-between items-center">
+                        <div class="text-sm text-gray-500">
+                            <span id="selected-count">6</span> of <span id="total-count">6</span> URLs selected
+                        </div>
+                        <button id="generate-btn" class="btn-primary text-white px-4 py-2 rounded-lg font-medium transition flex items-center">
+                            <i class="fas fa-magic mr-2"></i> Generate Sitemap
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Generated Sitemap Card -->
+                <div id="xml-section" class="hidden bg-white rounded-xl shadow-lg p-6 mb-6 card-hover flip-in">
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
+                        <h2 class="text-xl font-semibold text-gray-800 mb-2 md:mb-0">
+                            <i class="fas fa-code text-blue-500 mr-2"></i> Generated XML Sitemap
+                        </h2>
+                        <div class="flex space-x-2">
+                            <button id="copy-btn" class="text-sm bg-gray-50 text-gray-600 hover:bg-gray-100 px-3 py-1 rounded-lg transition flex items-center">
+                                <i class="fas fa-copy mr-1"></i> Copy XML
+                            </button>
+                            <button id="download-btn" class="text-sm bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 py-1 rounded-lg transition flex items-center">
+                                <i class="fas fa-download mr-1"></i> Download
+                            </button>
+                            <button id="validate-btn" class="text-sm bg-green-50 text-green-600 hover:bg-green-100 px-3 py-1 rounded-lg transition flex items-center">
+                                <i class="fas fa-check-circle mr-1"></i> Validate
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-800 rounded-lg p-4 overflow-x-auto glow">
+                        <pre id="xml-output" class="text-green-400 text-sm xml-code"><!-- XML will be generated here --></pre>
+                    </div>
+                    
+                    <div class="mt-4 bg-blue-50 border border-blue-100 rounded-lg p-3">
+                        <div class="flex items-start">
+                            <div class="bg-blue-100 p-2 rounded-full mr-3">
+                                <i class="fas fa-info-circle text-blue-600"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-800 mb-1">Next Steps</h4>
+                                <p class="text-xs text-gray-600">Upload your sitemap.xml to your website's root directory and submit it to <a href="https://search.google.com/search-console" target="_blank" class="text-blue-600 hover:underline">Google Search Console</a> and <a href="https://www.bing.com/webmasters" target="_blank" class="text-blue-600 hover:underline">Bing Webmaster Tools</a> for better indexing.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Features Section -->
+            <section id="features" class="py-12">
+                <h2 class="text-3xl font-bold text-center text-gray-800 mb-12">Why Use Our XML Sitemap Generator?</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="bg-white rounded-xl shadow-md p-6 card-hover">
+                        <div class="bg-blue-100 p-3 rounded-full w-12 h-12 flex items-center justify-center mb-4">
+                            <i class="fas fa-bolt text-blue-600"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-800 mb-2">Lightning Fast</h3>
+                        <p class="text-gray-600">Generate comprehensive sitemaps in seconds with our optimized crawling technology.</p>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl shadow-md p-6 card-hover">
+                        <div class="bg-green-100 p-3 rounded-full w-12 h-12 flex items-center justify-center mb-4">
+                            <i class="fas fa-shield-alt text-green-600"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-800 mb-2">Secure Processing</h3>
+                        <p class="text-gray-600">All processing happens in your browser. We never store or access your website data.</p>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl shadow-md p-6 card-hover">
+                        <div class="bg-purple-100 p-3 rounded-full w-12 h-12 flex items-center justify-center mb-4">
+                            <i class="fas fa-chart-line text-purple-600"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-800 mb-2">SEO Optimized</h3>
+                        <p class="text-gray-600">Follows all best practices for maximum search engine visibility and indexing.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- How It Works Section -->
+            <section id="how-it-works" class="py-12 bg-white rounded-xl shadow-md p-6 mb-8">
+                <h2 class="text-3xl font-bold text-center text-gray-800 mb-12">How It Works</h2>
+                
+                <div class="max-w-4xl mx-auto">
+                    <div class="flex flex-col md:flex-row mb-8">
+                        <div class="md:w-1/4 flex justify-center mb-4 md:mb-0">
+                            <div class="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center text-blue-600 font-bold text-2xl">1</div>
+                        </div>
+                        <div class="md:w-3/4">
+                            <h3 class="text-xl font-semibold text-gray-800 mb-2">Enter Your Website URL</h3>
+                            <p class="text-gray-600">Start by entering your website's homepage URL. Our crawler will discover all accessible pages on your site.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-col md:flex-row mb-8">
+                        <div class="md:w-1/4 flex justify-center mb-4 md:mb-0">
+                            <div class="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center text-blue-600 font-bold text-2xl">2</div>
+                        </div>
+                        <div class="md:w-3/4">
+                            <h3 class="text-xl font-semibold text-gray-800 mb-2">Configure Your Sitemap</h3>
+                            <p class="text-gray-600">Choose which metadata to include (last modified dates, priorities, change frequency) to help search engines understand your content better.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-col md:flex-row">
+                        <div class="md:w-1/4 flex justify-center mb-4 md:mb-0">
+                            <div class="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center text-blue-600 font-bold text-2xl">3</div>
+                        </div>
+                        <div class="md:w-3/4">
+                            <h3 class="text-xl font-semibold text-gray-800 mb-2">Download & Implement</h3>
+                            <p class="text-gray-600">Download your sitemap.xml file and upload it to your website's root directory. Then submit it to search engines for better indexing.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SEO Tips Section -->
+            <section id="seo-tips" class="py-12">
+                <h2 class="text-3xl font-bold text-center text-gray-800 mb-8">SEO Tips for Better Results</h2>
+                
+                <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-2">
+                        <div class="p-6">
+                            <h3 class="text-xl font-semibold text-gray-800 mb-4">XML Sitemap Best Practices</h3>
+                            <ul class="space-y-4">
+                                <li class="flex items-start">
+                                    <div class="bg-green-100 p-1 rounded-full mr-3 mt-1">
+                                        <i class="fas fa-check text-green-600 text-xs"></i>
+                                    </div>
+                                    <span class="text-gray-700">Keep your sitemap under 50,000 URLs and 50MB uncompressed</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <div class="bg-green-100 p-1 rounded-full mr-3 mt-1">
+                                        <i class="fas fa-check text-green-600 text-xs"></i>
+                                    </div>
+                                    <span class="text-gray-700">Include only canonical versions of your pages</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <div class="bg-green-100 p-1 rounded-full mr-3 mt-1">
+                                        <i class="fas fa-check text-green-600 text-xs"></i>
+                                    </div>
+                                    <span class="text-gray-700">Update your sitemap regularly when you add new content</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <div class="bg-green-100 p-1 rounded-full mr-3 mt-1">
+                                        <i class="fas fa-check text-green-600 text-xs"></i>
+                                    </div>
+                                    <span class="text-gray-700">Submit your sitemap to Google Search Console and Bing Webmaster Tools</span>
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <div class="bg-gray-50 p-6">
+                            <h3 class="text-xl font-semibold text-gray-800 mb-4">Advanced SEO Techniques</h3>
+                            <div class="space-y-4">
+                                <div class="bg-white p-4 rounded-lg border border-gray-200">
+                                    <h4 class="font-medium text-gray-800 mb-2">Video Sitemaps</h4>
+                                    <p class="text-sm text-gray-600">Consider creating a separate video sitemap if your site contains video content to help search engines understand your video content better.</p>
+                                </div>
+                                <div class="bg-white p-4 rounded-lg border border-gray-200">
+                                    <h4 class="font-medium text-gray-800 mb-2">Image Sitemaps</h4>
+                                    <p class="text-sm text-gray-600">Image sitemaps can help search engines discover images they might not otherwise find, especially those loaded via JavaScript.</p>
+                                </div>
+                                <div class="bg-white p-4 rounded-lg border border-gray-200">
+                                    <h4 class="font-medium text-gray-800 mb-2">News Sitemaps</h4>
+                                    <p class="text-sm text-gray-600">If you publish news articles, a Google News sitemap can help your content appear in Google News results.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- FAQ Section -->
+        <section class="py-12 max-w-4xl mx-auto">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-8">Frequently Asked Questions</h2>
+            
+            <div class="space-y-4">
+                <div class="bg-white rounded-xl shadow-md p-6 card-hover">
+                    <button class="faq-toggle w-full flex justify-between items-center text-left">
+                        <h3 class="text-lg font-medium text-gray-800">What is an XML sitemap?</h3>
+                        <i class="fas fa-chevron-down text-gray-400 transition-transform"></i>
+                    </button>
+                    <div class="faq-content mt-3 hidden">
+                        <p class="text-gray-600">An XML sitemap is a file that lists all important pages of your website in XML format, helping search engines discover and understand your site structure. It's particularly useful for large websites, new websites, or sites with complex navigation.</p>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-xl shadow-md p-6 card-hover">
+                    <button class="faq-toggle w-full flex justify-between items-center text-left">
+                        <h3 class="text-lg font-medium text-gray-800">How often should I update my sitemap?</h3>
+                        <i class="fas fa-chevron-down text-gray-400 transition-transform"></i>
+                    </button>
+                    <div class="faq-content mt-3 hidden">
+                        <p class="text-gray-600">You should update your sitemap whenever you add or remove significant content from your website. For most websites, updating the sitemap weekly or monthly is sufficient. Blogs or news sites with frequent updates might need more frequent sitemap updates.</p>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-xl shadow-md p-6 card-hover">
+                    <button class="faq-toggle w-full flex justify-between items-center text-left">
+                        <h3 class="text-lg font-medium text-gray-800">Do I need a sitemap for SEO?</h3>
+                        <i class="fas fa-chevron-down text-gray-400 transition-transform"></i>
+                    </button>
+                    <div class="faq-content mt-3 hidden">
+                        <p class="text-gray-600">While a sitemap isn't strictly required for SEO, it's highly recommended. A sitemap helps search engines discover all your important pages, especially if your site has poor internal linking, is new, or has a large number of pages. It can significantly improve your site's indexing.</p>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-xl shadow-md p-6 card-hover">
+                    <button class="faq-toggle w-full flex justify-between items-center text-left">
+                        <h3 class="text-lg font-medium text-gray-800">Where should I place my sitemap.xml file?</h3>
+                        <i class="fas fa-chevron-down text-gray-400 transition-transform"></i>
+                    </button>
+                    <div class="faq-content mt-3 hidden">
+                        <p class="text-gray-600">Your sitemap.xml file should be placed in the root directory of your website (e.g., https://yourwebsite.com/sitemap.xml). This is the standard location where search engines will look for it. You can also specify its location in your robots.txt file.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA Section -->
+        <section class="py-12 text-center">
+            <div class="bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl shadow-xl p-8 text-white max-w-4xl mx-auto">
+                <h2 class="text-2xl font-bold mb-4">Ready to Boost Your SEO?</h2>
+                <p class="text-lg mb-6">Generate your XML sitemap now and take the first step towards better search engine visibility.</p>
+                <button id="cta-btn" class="bg-white text-blue-600 hover:bg-gray-100 px-6 py-3 rounded-lg font-bold transition flex items-center mx-auto">
+                    <i class="fas fa-bolt mr-2"></i> Generate Sitemap Now
+                </button>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="text-center mt-12 pt-8 border-t border-gray-200">
+            <div class="flex justify-center space-x-6 mb-6">
+                <a href="#" class="text-gray-500 hover:text-gray-700">
+                    <i class="fab fa-twitter"></i>
+                </a>
+                <a href="#" class="text-gray-500 hover:text-gray-700">
+                    <i class="fab fa-facebook"></i>
+                </a>
+                <a href="#" class="text-gray-500 hover:text-gray-700">
+                    <i class="fab fa-github"></i>
+                </a>
+                <a href="#" class="text-gray-500 hover:text-gray-700">
+                    <i class="fab fa-linkedin"></i>
+                </a>
+            </div>
+            <p class="text-gray-500 text-sm mb-2">© <span id="current-year"></span> Advanced XML Sitemap Generator. All rights reserved.</p>
+            <p class="text-gray-400 text-xs">A free tool to help improve your website's SEO and search engine visibility.</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set current year in footer
+            document.getElementById('current-year').textContent = new Date().getFullYear();
+
+            // DOM elements
+            const websiteUrlInput = document.getElementById('website-url');
+            const crawlBtn = document.getElementById('crawl-btn');
+            const crawlText = document.getElementById('crawl-text');
+            const crawlSpinner = document.getElementById('crawl-spinner');
+            const optionsSection = document.getElementById('options-section');
+            const resultsSection = document.getElementById('results-section');
+            const urlList = document.getElementById('url-list');
+            const xmlOutput = document.getElementById('xml-output');
+            const downloadBtn = document.getElementById('download-btn');
+            const copyBtn = document.getElementById('copy-btn');
+            const generateBtn = document.getElementById('generate-btn');
+            const selectAllBtn = document.getElementById('select-all');
+            const deselectAllBtn = document.getElementById('deselect-all');
+            const validateBtn = document.getElementById('validate-btn');
+            const xmlSection = document.getElementById('xml-section');
+            const ctaBtn = document.getElementById('cta-btn');
+            const urlCount = document.getElementById('url-count');
+            const selectedCount = document.getElementById('selected-count');
+            const totalCount = document.getElementById('total-count');
+            const seoScore = document.getElementById('seo-score');
+            const seoProgress = document.getElementById('seo-progress');
+            const priorityValue = document.getElementById('priority-value');
+            const priorityDisplay = document.getElementById('priority-display');
+            
+            // Options elements
+            const includeLastmod = document.getElementById('include-lastmod');
+            const includePriority = document.getElementById('include-priority');
+            const includeChangefreq = document.getElementById('include-changefreq');
+            const changefreqSelect = document.getElementById('changefreq');
+
+            // Sample URLs for demonstration (in a real app, you would crawl the actual site)
+            const sampleUrls = [
+                { url: '/', lastmod: new Date().toISOString().split('T')[0], priority: '1.0' },
+                { url: '/about', lastmod: new Date().toISOString().split('T')[0], priority: '0.8' },
+                { url: '/services', lastmod: new Date().toISOString().split('T')[0], priority: '0.8' },
+                { url: '/blog', lastmod: new Date().toISOString().split('T')[0], priority: '0.7' },
+                { url: '/contact', lastmod: new Date().toISOString().split('T')[0], priority: '0.6' },
+                { url: '/privacy-policy', lastmod: new Date().toISOString().split('T')[0], priority: '0.3' },
+                { url: '/products', lastmod: new Date().toISOString().split('T')[0], priority: '0.9' },
+                { url: '/faq', lastmod: new Date().toISOString().split('T')[0], priority: '0.5' },
+                { url: '/testimonials', lastmod: new Date().toISOString().split('T')[0], priority: '0.4' }
+            ];
+
+            // Update priority display
+            priorityValue.addEventListener('input', function() {
+                const value = (this.value / 10).toFixed(1);
+                priorityDisplay.textContent = value;
+            });
+
+            // Create URL list item
+            function createUrlItem(urlData, baseUrl, index) {
+                const item = document.createElement('div');
+                item.className = 'url-item p-3 transition flex items-center bg-white';
+                item.innerHTML = `
+                    <label class="flex items-center w-full cursor-pointer">
+                        <input type="checkbox" class="url-checkbox rounded text-blue-600 focus:ring-blue-500 mr-3" checked data-index="${index}">
+                        <span class="text-sm text-gray-700 truncate flex-1">${baseUrl}${urlData.url}</span>
+                        <span class="text-xs text-gray-500 ml-2 hidden md:inline">${urlData.lastmod}</span>
+                        <span class="text-xs text-gray-500 ml-2 hidden md:inline">${urlData.priority}</span>
+                    </label>
+                `;
+                return item;
+            }
+
+            // Generate XML sitemap
+            function generateSitemap(urls, baseUrl) {
+                let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+                xml += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
+                
+                urls.forEach(urlData => {
+                    const fullUrl = baseUrl + urlData.url;
+                    xml += `  <url>\n`;
+                    xml += `    <loc>${fullUrl}</loc>\n`;
+                    
+                    if (includeLastmod.checked && urlData.lastmod) {
+                        xml += `    <lastmod>${urlData.lastmod}</lastmod>\n`;
+                    }
+                    
+                    if (includeChangefreq.checked) {
+                        xml += `    <changefreq>${changefreqSelect.value}</changefreq>\n`;
+                    }
+                    
+                    if (includePriority.checked && urlData.priority) {
+                        xml += `    <priority>${urlData.priority}</priority>\n`;
+                    }
+                    
+                    xml += `  </url>\n`;
+                });
+                
+                xml += `</urlset>`;
+                return xml;
+            }
+
+            // Download XML file
+            function downloadXml(xmlContent) {
+                const blob = new Blob([xmlContent], { type: 'application/xml' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'sitemap.xml';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                // Show download confirmation
+                const originalText = downloadBtn.innerHTML;
+                downloadBtn.innerHTML = `<i class="fas fa-check mr-1"></i> Downloaded!`;
+                downloadBtn.classList.remove('bg-blue-50', 'text-blue-600');
+                downloadBtn.classList.add('bg-green-50', 'text-green-600');
+                
+                setTimeout(() => {
+                    downloadBtn.innerHTML = originalText;
+                    downloadBtn.classList.add('bg-blue-50', 'text-blue-600');
+                    downloadBtn.classList.remove('bg-green-50', 'text-green-600');
+                }, 2000);
+            }
+
+            // Copy XML to clipboard
+            function copyXmlToClipboard(xmlContent) {
+                navigator.clipboard.writeText(xmlContent).then(() => {
+                    // Show copy confirmation
+                    const originalText = copyBtn.innerHTML;
+                    copyBtn.innerHTML = `<i class="fas fa-check mr-1"></i> Copied!`;
+                    copyBtn.classList.remove('bg-gray-50', 'text-gray-600');
+                    copyBtn.classList.add('bg-green-50', 'text-green-600');
+                    
+                    setTimeout(() => {
+                        copyBtn.innerHTML = originalText;
+                        copyBtn.classList.add('bg-gray-50', 'text-gray-600');
+                        copyBtn.classList.remove('bg-green-50', 'text-green-600');
+                    }, 2000);
+                }).catch(err => {
+                    console.error('Failed to copy: ', err);
+                    alert('Failed to copy XML to clipboard');
+                });
+            }
+
+            // Validate XML (simulated)
+            function validateXml() {
+                // Simulate validation
+                validateBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-1"></i> Validating...`;
+                validateBtn.disabled = true;
+                
+                setTimeout(() => {
+                    validateBtn.innerHTML = `<i class="fas fa-check-circle mr-1"></i> Valid`;
+                    validateBtn.classList.remove('bg-green-50', 'text-green-600');
+                    validateBtn.classList.add('bg-green-100', 'text-green-700');
+                    validateBtn.disabled = false;
+                    
+                    // Show validation message
+                    const validationMessage = document.createElement('div');
+                    validationMessage.className = 'mt-4 bg-green-50 border border-green-200 rounded-lg p-3';
+                    validationMessage.innerHTML = `
+                        <div class="flex items-start">
+                            <div class="bg-green-100 p-2 rounded-full mr-3">
+                                <i class="fas fa-check text-green-600"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-800 mb-1">Sitemap Validation Successful</h4>
+                                <p class="text-xs text-gray-600">Your XML sitemap follows all required standards and is ready for submission to search engines.</p>
+                            </div>
+                        </div>
+                    `;
+                    
+                    const existingMessage = xmlSection.querySelector('.bg-green-50');
+                    if (existingMessage) {
+                        existingMessage.replaceWith(validationMessage);
+                    } else {
+                        xmlSection.querySelector('.mt-4').before(validationMessage);
+                    }
+                    
+                    // Reset button after 5 seconds
+                    setTimeout(() => {
+                        validateBtn.innerHTML = `<i class="fas fa-check-circle mr-1"></i> Validate`;
+                        validateBtn.classList.add('bg-green-50', 'text-green-600');
+                        validateBtn.classList.remove('bg-green-100', 'text-green-700');
+                    }, 5000);
+                }, 1500);
+            }
+
+            // Update selected count
+            function updateSelectedCount() {
+                const total = document.querySelectorAll('.url-checkbox').length;
+                const selected = document.querySelectorAll('.url-checkbox:checked').length;
+                
+                selectedCount.textContent = selected;
+                totalCount.textContent = total;
+                
+                // Update SEO score based on selection
+                const score = Math.min(100, 70 + Math.round((selected / total) * 30));
+                updateSeoScore(score);
+            }
+
+            // Update SEO score with animation
+            function updateSeoScore(newScore) {
+                let currentScore = parseInt(seoScore.textContent);
+                const increment = newScore > currentScore ? 1 : -1;
+                
+                const interval = setInterval(() => {
+                    if (currentScore === newScore) {
+                        clearInterval(interval);
+                        return;
+                    }
+                    
+                    currentScore += increment;
+                    seoScore.textContent = currentScore;
+                    seoProgress.setAttribute('stroke-dasharray', `${currentScore}, 100`);
+                }, 20);
+            }
+
+            // Crawl button click handler
+            crawlBtn.addEventListener('click', function() {
+                const url = websiteUrlInput.value.trim();
+                
+                if (!url) {
+                    alert('Please enter a website URL');
+                    return;
+                }
+
+                // Validate URL format
+                try {
+                    new URL(url);
+                } catch (e) {
+                    alert('Please enter a valid URL (e.g., https://example.com)');
+                    return;
+                }
+
+                // Show loading state
+                crawlText.textContent = 'Crawling...';
+                crawlSpinner.classList.remove('hidden');
+                crawlBtn.disabled = true;
+
+                // Simulate crawling (in a real app, you would make an actual request)
+                setTimeout(() => {
+                    // Clear previous results
+                    urlList.innerHTML = '';
+                    
+                    // Add sample URLs to the list
+                    sampleUrls.forEach((urlData, index) => {
+                        urlList.appendChild(createUrlItem(urlData, url, index));
+                    });
+                    
+                    // Update counts
+                    urlCount.textContent = `(${sampleUrls.length} pages)`;
+                    selectedCount.textContent = sampleUrls.length;
+                    totalCount.textContent = sampleUrls.length;
+                    
+                    // Show options and results sections
+                    optionsSection.classList.remove('hidden');
+                    resultsSection.classList.remove('hidden');
+                    
+                    // Initialize SEO score
+                    updateSeoScore(78);
+                    
+                    // Reset button state
+                    crawlText.textContent = 'Re-crawl Site';
+                    crawlSpinner.classList.add('hidden');
+                    crawlBtn.disabled = false;
+                }, 1500);
+            });
+
+            // Generate button click handler
+            generateBtn.addEventListener('click', function() {
+                const baseUrl = websiteUrlInput.value.trim();
+                const checkedUrls = [];
+                
+                // Get all checked URLs
+                document.querySelectorAll('.url-checkbox:checked').forEach(checkbox => {
+                    const index = parseInt(checkbox.dataset.index);
+                    checkedUrls.push(sampleUrls[index]);
+                });
+                
+                if (checkedUrls.length === 0) {
+                    alert('Please select at least one URL to include in your sitemap');
+                    return;
+                }
+                
+                // Generate and display XML
+                const xmlContent = generateSitemap(checkedUrls, baseUrl);
+                xmlOutput.textContent = xmlContent;
+                
+                // Show XML section with animation
+                xmlSection.classList.remove('hidden');
+                xmlSection.scrollIntoView({ behavior: 'smooth' });
+                
+                // Update SEO score based on options
+                let score = 70;
+                if (includeLastmod.checked) score += 10;
+                if (includeChangefreq.checked) score += 10;
+                if (includePriority.checked) score += 10;
+                score = Math.min(score, 100);
+                updateSeoScore(score);
+            });
+
+            // Download button click handler
+            downloadBtn.addEventListener('click', function() {
+                const baseUrl = websiteUrlInput.value.trim();
+                const checkedUrls = [];
+                
+                // Get all checked URLs
+                document.querySelectorAll('.url-checkbox:checked').forEach(checkbox => {
+                    const index = parseInt(checkbox.dataset.index);
+                    checkedUrls.push(sampleUrls[index]);
+                });
+                
+                // Generate and download XML
+                const xmlContent = generateSitemap(checkedUrls, baseUrl);
+                downloadXml(xmlContent);
+            });
+
+            // Copy button click handler
+            copyBtn.addEventListener('click', function() {
+                copyXmlToClipboard(xmlOutput.textContent);
+            });
+
+            // Validate button click handler
+            validateBtn.addEventListener('click', validateXml);
+
+            // Select all/deselect all buttons
+            selectAllBtn.addEventListener('click', function() {
+                document.querySelectorAll('.url-checkbox').forEach(checkbox => {
+                    checkbox.checked = true;
+                });
+                updateSelectedCount();
+            });
+            
+            deselectAllBtn.addEventListener('click', function() {
+                document.querySelectorAll('.url-checkbox').forEach(checkbox => {
+                    checkbox.checked = false;
+                });
+                updateSelectedCount();
+            });
+
+            // Update selected count when checkboxes change
+            document.addEventListener('change', function(e) {
+                if (e.target.classList.contains('url-checkbox')) {
+                    updateSelectedCount();
+                }
+            });
+
+            // Update XML when options change
+            [includeLastmod, includePriority, includeChangefreq, changefreqSelect].forEach(element => {
+                element.addEventListener('change', function() {
+                    if (xmlSection.classList.contains('hidden')) return;
+                    
+                    const baseUrl = websiteUrlInput.value.trim();
+                    const checkedUrls = [];
+                    
+                    document.querySelectorAll('.url-checkbox:checked').forEach(checkbox => {
+                        const index = parseInt(checkbox.dataset.index);
+                        checkedUrls.push(sampleUrls[index]);
+                    });
+                    
+                    const xmlContent = generateSitemap(checkedUrls, baseUrl);
+                    xmlOutput.textContent = xmlContent;
+                    
+                    // Update SEO score based on options
+                    let score = 70;
+                    if (includeLastmod.checked) score += 10;
+                    if (includeChangefreq.checked) score += 10;
+                    if (includePriority.checked) score += 10;
+                    score = Math.min(score, 100);
+                    updateSeoScore(score);
+                });
+            });
+
+            // Allow pressing Enter key to crawl
+            websiteUrlInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    crawlBtn.click();
+                }
+            });
+
+            // CTA button click handler
+            ctaBtn.addEventListener('click', function() {
+                websiteUrlInput.scrollIntoView({ behavior: 'smooth' });
+                websiteUrlInput.focus();
+            });
+
+            // FAQ toggle functionality
+            document.querySelectorAll('.faq-toggle').forEach(toggle => {
+                toggle.addEventListener('click', function() {
+                    const content = this.nextElementSibling;
+                    const icon = this.querySelector('i');
+                    
+                    if (content.classList.contains('hidden')) {
+                        content.classList.remove('hidden');
+                        icon.style.transform = 'rotate(180deg)';
+                    } else {
+                        content.classList.add('hidden');
+                        icon.style.transform = 'rotate(0deg)';
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

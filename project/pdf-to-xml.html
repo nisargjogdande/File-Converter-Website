@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF to XML Converter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <style>
+        .dropzone {
+            transition: all 0.3s ease;
+        }
+        .dropzone.active {
+            border-color: #3b82f6;
+            background-color: #f0f7ff;
+        }
+        .loading-spinner {
+            display: inline-block;
+            width: 1.5rem;
+            height: 1.5rem;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .xml-preview {
+            font-family: monospace;
+            white-space: pre;
+            overflow-x: auto;
+            background-color: #f8fafc;
+            padding: 1rem;
+            border-radius: 0.375rem;
+        }
+        .tab-button {
+            transition: all 0.2s ease;
+        }
+        .tab-button.active {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .text-preview {
+            white-space: pre-wrap;
+            background-color: #f8fafc;
+            padding: 1rem;
+            border-radius: 0.375rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <div class="max-w-4xl mx-auto">
+            <!-- Header -->
+            <header class="text-center mb-10">
+                <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-2">PDF to XML Converter</h1>
+                <p class="text-gray-600">Extract text from PDF files and convert to structured XML format</p>
+            </header>
+
+            <!-- Main Card -->
+            <div class="bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg">
+                <div class="p-6 md:p-8">
+                    <!-- File Upload Section -->
+                    <div class="mb-8">
+                        <div id="dropzone" class="dropzone border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer">
+                            <div class="flex flex-col items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-blue-500 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                </svg>
+                                <h3 class="text-lg font-medium text-gray-700 mb-1">Upload PDF File</h3>
+                                <p class="text-sm text-gray-500 mb-3">Drag and drop your PDF here or click to browse</p>
+                                <span id="fileInfo" class="text-sm font-medium text-blue-600">No file selected</span>
+                                <input id="fileInput" type="file" accept=".pdf" class="hidden">
+                            </div>
+                        </div>
+                        <div class="mt-4 flex flex-wrap gap-3 justify-center">
+                            <button id="convertBtn" disabled class="px-6 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                                Convert to XML
+                            </button>
+                            <button id="resetBtn" disabled class="px-6 py-2 bg-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                                Reset
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Options Section -->
+                    <div class="mb-8 border-t pt-6">
+                        <h3 class="text-lg font-medium text-gray-800 mb-4">Conversion Options</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="rootElement" class="block text-sm font-medium text-gray-700 mb-1">Root Element Name</label>
+                                <input type="text" id="rootElement" value="document" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label for="pageElement" class="block text-sm font-medium text-gray-700 mb-1">Page Element Name</label>
+                                <input type="text" id="pageElement" value="page" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                            <div class="flex items-center">
+                                <input id="includeMetadata" type="checkbox" checked class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                <label for="includeMetadata" class="ml-2 block text-sm text-gray-700">Include PDF metadata</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input id="formatOutput" type="checkbox" checked class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                <label for="formatOutput" class="ml-2 block text-sm text-gray-700">Format XML output</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Preview Section -->
+                    <div>
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-medium text-gray-800">Conversion Preview</h3>
+                            <div class="flex border rounded-md overflow-hidden">
+                                <button id="previewTabBtn" class="tab-button active px-4 py-2 text-sm font-medium">XML Preview</button>
+                                <button id="rawTextTabBtn" class="tab-button px-4 py-2 text-sm font-medium">Raw Text</button>
+                            </div>
+                        </div>
+                        <div id="previewContainer" class="border border-gray-200 rounded-lg overflow-hidden bg-gray-50">
+                            <div id="xmlPreview" class="xml-preview hidden max-h-96 overflow-auto"></div>
+                            <div id="rawTextPreview" class="text-preview hidden max-h-96 overflow-auto"></div>
+                            <div id="emptyPreview" class="p-8 text-center text-gray-500">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-3 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                <p>Converted XML will appear here</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <footer class="mt-12 text-center text-gray-500 text-sm">
+                <p>PDF to XML Converter &copy; <span id="year"></span> - All rights reserved</p>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Status Modal -->
+    <div id="statusModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl p-6 max-w-sm w-full mx-4">
+            <div class="text-center">
+                <div id="statusIcon" class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100">
+                    <svg id="successIcon" class="h-6 w-6 text-blue-600 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <div id="loadingSpinner" class="loading-spinner"></div>
+                </div>
+                <h3 id="statusTitle" class="mt-3 text-lg font-medium text-gray-900">Processing...</h3>
+                <div class="mt-2">
+                    <p id="statusMessage" class="text-sm text-gray-500">Your PDF is being converted. Please wait.</p>
+                </div>
+                <div class="mt-4">
+                    <button id="closeModalBtn" type="button" class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Close
+                    </button>
+                    <a id="downloadBtn" href="#" download class="px-4 py-2 ml-3 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 hidden">
+                        Download XML
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Set current year in footer
+        document.getElementById('year').textContent = new Date().getFullYear();
+
+        // Initialize PDF.js worker
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+
+        // DOM elements
+        const dropzone = document.getElementById('dropzone');
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const convertBtn = document.getElementById('convertBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const previewContainer = document.getElementById('previewContainer');
+        const xmlPreview = document.getElementById('xmlPreview');
+        const rawTextPreview = document.getElementById('rawTextPreview');
+        const emptyPreview = document.getElementById('emptyPreview');
+        const previewTabBtn = document.getElementById('previewTabBtn');
+        const rawTextTabBtn = document.getElementById('rawTextTabBtn');
+        const statusModal = document.getElementById('statusModal');
+        const statusTitle = document.getElementById('statusTitle');
+        const statusMessage = document.getElementById('statusMessage');
+        const statusIcon = document.getElementById('statusIcon');
+        const successIcon = document.getElementById('successIcon');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+
+        // Variables
+        let pdfFile = null;
+        let extractedText = '';
+        let xmlOutput = '';
+
+        // File input click event
+        dropzone.addEventListener('click', () => fileInput.click());
+
+        // File input change event
+        fileInput.addEventListener('change', handleFileSelect);
+
+        // Drag and drop events
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropzone.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropzone.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropzone.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight() {
+            dropzone.classList.add('active');
+        }
+
+        function unhighlight() {
+            dropzone.classList.remove('active');
+        }
+
+        dropzone.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            fileInput.files = files;
+            handleFileSelect({ target: fileInput });
+        }
+
+        // Handle file selection
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (!file || !file.name.toLowerCase().endsWith('.pdf')) {
+                fileInfo.textContent = 'Please select a PDF file';
+                return;
+            }
+
+            pdfFile = file;
+            fileInfo.textContent = file.name;
+            convertBtn.disabled = false;
+            resetBtn.disabled = false;
+
+            // Clear previous previews
+            xmlPreview.classList.add('hidden');
+            rawTextPreview.classList.add('hidden');
+            emptyPreview.classList.remove('hidden');
+            xmlPreview.textContent = '';
+            rawTextPreview.textContent = '';
+        }
+
+        // Tab switching
+        previewTabBtn.addEventListener('click', () => {
+            previewTabBtn.classList.add('active', 'bg-blue-600', 'text-white');
+            rawTextTabBtn.classList.remove('active', 'bg-blue-600', 'text-white');
+            if (xmlOutput) {
+                xmlPreview.classList.remove('hidden');
+                rawTextPreview.classList.add('hidden');
+                emptyPreview.classList.add('hidden');
+            }
+        });
+
+        rawTextTabBtn.addEventListener('click', () => {
+            rawTextTabBtn.classList.add('active', 'bg-blue-600', 'text-white');
+            previewTabBtn.classList.remove('active', 'bg-blue-600', 'text-white');
+            if (extractedText) {
+                rawTextPreview.classList.remove('hidden');
+                xmlPreview.classList.add('hidden');
+                emptyPreview.classList.add('hidden');
+            }
+        });
+
+        // Convert to XML
+        convertBtn.addEventListener('click', async function() {
+            if (!pdfFile) return;
+
+            // Show processing modal
+            showStatusModal('Processing...', 'Extracting text from PDF and converting to XML.', 'loading');
+
+            try {
+                // Read the PDF file
+                const arrayBuffer = await readFileAsArrayBuffer(pdfFile);
+                const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+                
+                // Extract text from all pages
+                extractedText = '';
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const textContent = await page.getTextContent();
+                    const pageText = textContent.items.map(item => item.str).join(' ');
+                    extractedText += `PAGE ${i}:\n${pageText}\n\n`;
+                }
+
+                // Generate XML
+                const rootElement = document.getElementById('rootElement').value || 'document';
+                const pageElement = document.getElementById('pageElement').value || 'page';
+                const includeMetadata = document.getElementById('includeMetadata').checked;
+                const formatOutput = document.getElementById('formatOutput').checked;
+
+                let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+                xml += `<${rootElement}>\n`;
+
+                if (includeMetadata) {
+                    const metadata = await pdf.getMetadata();
+                    xml += `  <metadata>\n`;
+                    if (metadata.info) {
+                        for (const [key, value] of Object.entries(metadata.info)) {
+                            if (value) {
+                                xml += `    <${key}>${escapeXml(value.toString())}</${key}>\n`;
+                            }
+                        }
+                    }
+                    xml += `  </metadata>\n`;
+                }
+
+                // Split text by pages and add to XML
+                const pages = extractedText.split(/\n{2,}/);
+                pages.forEach((pageText, index) => {
+                    if (pageText.trim()) {
+                        xml += `  <${pageElement} number="${index + 1}">\n`;
+                        xml += `    <content>${escapeXml(pageText.trim())}</content>\n`;
+                        xml += `  </${pageElement}>\n`;
+                    }
+                });
+
+                xml += `</${rootElement}>`;
+
+                // Format XML if requested
+                if (formatOutput) {
+                    xml = formatXml(xml);
+                }
+
+                xmlOutput = xml;
+
+                // Update preview
+                xmlPreview.textContent = xml;
+                rawTextPreview.textContent = extractedText;
+                previewTabBtn.click(); // Show XML preview by default
+
+                // Update modal for success
+                showStatusModal('Conversion Complete!', 'Your PDF has been successfully converted to XML.', 'success');
+                
+                // Create download link
+                const zip = new JSZip();
+                zip.file(pdfFile.name.replace('.pdf', '.xml'), xml);
+                const zipContent = await zip.generateAsync({ type: 'blob' });
+                const zipUrl = URL.createObjectURL(zipContent);
+                
+                downloadBtn.href = zipUrl;
+                downloadBtn.download = pdfFile.name.replace('.pdf', '.zip');
+                downloadBtn.classList.remove('hidden');
+
+            } catch (error) {
+                console.error('Error converting PDF to XML:', error);
+                showStatusModal('Conversion Failed', 'An error occurred while converting your PDF. Please try again.', 'error');
+            }
+        });
+
+        // Helper function to read file as ArrayBuffer
+        function readFileAsArrayBuffer(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        // Helper function to escape XML special characters
+        function escapeXml(unsafe) {
+            return unsafe.replace(/[<>&'"]/g, function (c) {
+                switch (c) {
+                    case '<': return '&lt;';
+                    case '>': return '&gt;';
+                    case '&': return '&amp;';
+                    case '\'': return '&apos;';
+                    case '"': return '&quot;';
+                }
+            });
+        }
+
+        // Helper function to format XML with proper indentation
+        function formatXml(xml) {
+            const PADDING = '  '; 
+            let formatted = '';
+            let indent = 0;
+            let inTag = false;
+
+            xml.split(/>\s*</).forEach(node => {
+                if (node.match(/^\/\w/)) indent--; // Closing tag
+                const padding = PADDING.repeat(indent);
+                formatted += `${inTag ? '>' : ''}${!inTag && node ? '\n' + padding : ''}<${node}`;
+                if (node.match(/^\/?\w[^>]*$/)) {
+                    inTag = true;
+                } else {
+                    inTag = false;
+                    if (!node.match(/^\/\w/)) indent++; // Opening tag
+                }
+            });
+
+            return formatted.substring(1); // Remove leading newline
+        }
+
+        // Reset button
+        resetBtn.addEventListener('click', function() {
+            fileInput.value = '';
+            fileInfo.textContent = 'No file selected';
+            xmlPreview.classList.add('hidden');
+            rawTextPreview.classList.add('hidden');
+            emptyPreview.classList.remove('hidden');
+            xmlPreview.textContent = '';
+            rawTextPreview.textContent = '';
+            convertBtn.disabled = true;
+            resetBtn.disabled = true;
+            pdfFile = null;
+            extractedText = '';
+            xmlOutput = '';
+            previewTabBtn.classList.add('active', 'bg-blue-600', 'text-white');
+            rawTextTabBtn.classList.remove('active', 'bg-blue-600', 'text-white');
+        });
+
+        // Status modal functions
+        function showStatusModal(title, message, type) {
+            statusTitle.textContent = title;
+            statusMessage.textContent = message;
+            
+            if (type === 'success') {
+                loadingSpinner.classList.add('hidden');
+                successIcon.classList.remove('hidden');
+                statusIcon.classList.remove('bg-blue-100');
+                statusIcon.classList.add('bg-green-100');
+                successIcon.classList.remove('text-blue-600');
+                successIcon.classList.add('text-green-600');
+            } else if (type === 'error') {
+                loadingSpinner.classList.add('hidden');
+                statusIcon.innerHTML = `
+                    <svg class="h-6 w-6 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                `;
+                statusIcon.classList.remove('bg-blue-100');
+                statusIcon.classList.add('bg-red-100');
+            } else {
+                // Loading state
+                loadingSpinner.classList.remove('hidden');
+                successIcon.classList.add('hidden');
+                statusIcon.classList.remove('bg-green-100', 'bg-red-100');
+                statusIcon.classList.add('bg-blue-100');
+            }
+            
+            statusModal.classList.remove('hidden');
+        }
+
+        // Close modal
+        closeModalBtn.addEventListener('click', function() {
+            statusModal.classList.add('hidden');
+            downloadBtn.classList.add('hidden');
+        });
+    </script>
+</body>
+</html>

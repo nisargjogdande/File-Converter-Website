@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIP Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <style>
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
+            50% { box-shadow: 0 0 20px 10px rgba(59, 130, 246, 0); }
+        }
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+        .animate-pulse-glow {
+            animation: pulse-glow 2s infinite;
+        }
+        .input-slider {
+            -webkit-appearance: none;
+            height: 8px;
+            border-radius: 4px;
+            background: #e5e7eb;
+        }
+        .input-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 24px;
+            height: 24px;
+            background: white;
+            border: 3px solid #3b82f6;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .input-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.8);
+        }
+        .result-card {
+            transform: perspective(1000px) rotateX(5deg);
+            transform-origin: bottom;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            opacity: 0;
+        }
+        .result-card.show {
+            transform: perspective(1000px) rotateX(0);
+            opacity: 1;
+        }
+        .chart-bar {
+            transform-origin: bottom;
+            animation: chart-grow 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        @keyframes chart-grow {
+            from { transform: scaleY(0); }
+            to { transform: scaleY(1); }
+        }
+        .ripple {
+            position: relative;
+            overflow: hidden;
+        }
+        .ripple:after {
+            content: "";
+            display: block;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            background-image: radial-gradient(circle, #fff 10%, transparent 10.01%);
+            background-repeat: no-repeat;
+            background-position: 50%;
+            transform: scale(10,10);
+            opacity: 0;
+            transition: transform .5s, opacity 1s;
+        }
+        .ripple:active:after {
+            transform: scale(0,0);
+            opacity: 0.3;
+            transition: 0s;
+        }
+        .tooltip {
+            position: absolute;
+            padding: 8px 12px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            border-radius: 6px;
+            pointer-events: none;
+            font-size: 14px;
+            z-index: 10;
+            transform: translate(-50%, -120%);
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            white-space: nowrap;
+        }
+        .tooltip:after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: rgba(0, 0, 0, 0.8) transparent transparent transparent;
+        }
+        .slider-container {
+            position: relative;
+        }
+        .slider-fill {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 8px;
+            background: #3b82f6;
+            border-radius: 4px;
+            z-index: 1;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center p-4 font-sans">
+    <div class="max-w-4xl w-full bg-white rounded-2xl shadow-2xl overflow-hidden transition-all duration-500 hover:shadow-3xl">
+        <div class="bg-gradient-to-br from-blue-600 to-indigo-700 p-8 text-white">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-4xl font-bold animate__animated animate__fadeInDown">SIP Calculator</h1>
+                    <p class="text-blue-100 mt-2 text-lg animate__animated animate__fadeIn animate__delay-1s">Plan your wealth creation journey</p>
+                </div>
+                <div class="animate-float hidden md:block">
+                    <svg width="80" height="80" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M8 14C8 14 9.5 16 12 16C14.5 16 16 14 16 14" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M15 9H15.01" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M9 9H9.01" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M8 3H4C3.44772 3 3 3.44772 3 4V8" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M3 16V20C3 20.5523 3.44772 21 4 21H8" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M16 21H20C20.5523 21 21 20.5523 21 20V16" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M21 8V4C21 3.44772 20.5523 3 20 3H16" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-8 grid md:grid-cols-2 gap-8">
+            <div class="space-y-8">
+                <div class="relative">
+                    <label for="monthlyInvestment" class="block text-gray-700 font-medium mb-3 text-lg">Monthly Investment (₹)</label>
+                    <div class="slider-container">
+                        <div class="slider-fill" id="monthlyInvestmentFill"></div>
+                        <input type="range" id="monthlyInvestment" min="1000" max="100000" step="1000" value="10000" 
+                               class="input-slider w-full h-3 rounded-lg cursor-pointer relative z-10">
+                    </div>
+                    <div class="relative mt-4">
+                        <span id="monthlyInvestmentValue" class="text-gray-800 font-bold min-w-[90px] text-right text-xl block px-3 py-1 bg-gray-100 rounded-lg">10,000</span>
+                        <div class="tooltip">Adjust your monthly SIP amount</div>
+                    </div>
+                </div>
+
+                <div class="relative">
+                    <label for="investmentPeriod" class="block text-gray-700 font-medium mb-3 text-lg">Investment Period (years)</label>
+                    <div class="slider-container">
+                        <div class="slider-fill" id="investmentPeriodFill"></div>
+                        <input type="range" id="investmentPeriod" min="1" max="30" value="10" 
+                               class="input-slider w-full h-3 rounded-lg cursor-pointer relative z-10">
+                    </div>
+                    <div class="relative mt-4">
+                        <span id="investmentPeriodValue" class="text-gray-800 font-bold min-w-[50px] text-right text-xl block px-3 py-1 bg-gray-100 rounded-lg">10</span>
+                        <div class="tooltip">Select investment duration</div>
+                    </div>
+                </div>
+
+                <div class="relative">
+                    <label for="expectedReturn" class="block text-gray-700 font-medium mb-3 text-lg">Expected Return (p.a.)</label>
+                    <div class="slider-container">
+                        <div class="slider-fill" id="expectedReturnFill"></div>
+                        <input type="range" id="expectedReturn" min="1" max="30" step="0.1" value="12" 
+                               class="input-slider w-full h-3 rounded-lg cursor-pointer relative z-10">
+                    </div>
+                    <div class="relative mt-4">
+                        <span id="expectedReturnValue" class="text-gray-800 font-bold min-w-[60px] text-right text-xl block px-3 py-1 bg-gray-100 rounded-lg">12%</span>
+                        <div class="tooltip">Set expected annual return rate</div>
+                    </div>
+                </div>
+
+                <button id="calculateBtn" 
+                        class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-[1.02] active:scale-95 shadow-lg hover:shadow-xl ripple animate-pulse-glow text-lg">
+                    Calculate Wealth Projection
+                </button>
+            </div>
+
+            <div id="resultContainer" class="space-y-8">
+                <div class="result-card bg-white border-2 border-gray-100 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:border-blue-200">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                        <svg class="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                        Projected Returns
+                    </h2>
+                    
+                    <div class="grid grid-cols-2 gap-6 mb-6">
+                        <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-xl border border-blue-200 transform transition-all duration-300 hover:scale-105">
+                            <p class="text-gray-600 text-sm mb-1">Invested Amount</p>
+                            <p id="investedAmount" class="text-2xl font-bold text-gray-800">₹1,20,000</p>
+                        </div>
+                        <div class="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-xl border border-green-200 transform transition-all duration-300 hover:scale-105">
+                            <p class="text-gray-600 text-sm mb-1">Est. Returns</p>
+                            <p id="estimatedReturns" class="text-2xl font-bold text-green-600">₹1,15,000</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gradient-to-br from-indigo-50 to-indigo-100 p-5 rounded-xl border border-indigo-200 transform transition-all duration-300 hover:scale-[1.02]">
+                        <p class="text-gray-600 text-sm mb-1">Total Value</p>
+                        <p id="totalValue" class="text-3xl font-bold text-indigo-600">₹2,35,000</p>
+                    </div>
+                </div>
+
+                <div class="result-card bg-white border-2 border-gray-100 rounded-2xl p-5 shadow-lg hover:shadow-xl transition-all duration-300 hover:border-blue-200">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                        <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                        Wealth Growth
+                    </h3>
+                    <div class="h-64" id="sipChart">
+                        <!-- Chart will be rendered here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-gray-50 px-8 py-6 border-t border-gray-200">
+            <h3 class="font-semibold text-gray-700 text-lg mb-4">How SIP Works:</h3>
+            <div class="grid md:grid-cols-3 gap-4 text-sm text-gray-600">
+                <div class="bg-white p-4 rounded-lg border border-gray-200 transform transition-all duration-300 hover:shadow-md hover:-translate-y-1">
+                    <div class="flex items-start mb-2">
+                        <div class="bg-blue-100 p-2 rounded-full mr-3">
+                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="font-medium text-gray-700 mb-1">Rupee Cost Averaging</h4>
+                            <p>Invest fixed amounts regularly to average out purchase costs over time.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-4 rounded-lg border border-gray-200 transform transition-all duration-300 hover:shadow-md hover:-translate-y-1">
+                    <div class="flex items-start mb-2">
+                        <div class="bg-green-100 p-2 rounded-full mr-3">
+                            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="font-medium text-gray-700 mb-1">Compounding Magic</h4>
+                            <p>Earn returns on your returns, accelerating wealth creation over time.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-4 rounded-lg border border-gray-200 transform transition-all duration-300 hover:shadow-md hover:-translate-y-1">
+                    <div class="flex items-start mb-2">
+                        <div class="bg-purple-100 p-2 rounded-full mr-3">
+                            <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="font-medium text-gray-700 mb-1">Disciplined Investing</h4>
+                            <p>Automate investments to build wealth systematically without timing the market.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Input elements
+            const monthlyInvestment = document.getElementById('monthlyInvestment');
+            const investmentPeriod = document.getElementById('investmentPeriod');
+            const expectedReturn = document.getElementById('expectedReturn');
+            const calculateBtn = document.getElementById('calculateBtn');
+            
+            // Slider fill elements
+            const monthlyInvestmentFill = document.getElementById('monthlyInvestmentFill');
+            const investmentPeriodFill = document.getElementById('investmentPeriodFill');
+            const expectedReturnFill = document.getElementById('expectedReturnFill');
+            
+            // Display elements
+            const monthlyInvestmentValue = document.getElementById('monthlyInvestmentValue');
+            const investmentPeriodValue = document.getElementById('investmentPeriodValue');
+            const expectedReturnValue = document.getElementById('expectedReturnValue');
+            
+            // Result elements
+            const investedAmount = document.getElementById('investedAmount');
+            const estimatedReturns = document.getElementById('estimatedReturns');
+            const totalValue = document.getElementById('totalValue');
+            const sipChart = document.getElementById('sipChart');
+            const resultCards = document.querySelectorAll('.result-card');
+            
+            // Format currency
+            const formatter = new Intl.NumberFormat('en-IN', {
+                style: 'currency',
+                currency: 'INR',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            });
+
+            // Initialize slider fills
+            updateSliderFill(monthlyInvestment, monthlyInvestmentFill);
+            updateSliderFill(investmentPeriod, investmentPeriodFill);
+            updateSliderFill(expectedReturn, expectedReturnFill);
+
+            // Update slider fill when value changes
+            function updateSliderFill(slider, fillElement) {
+                const percent = (slider.value - slider.min) / (slider.max - slider.min) * 100;
+                fillElement.style.width = percent + '%';
+            }
+
+            // Update displayed values when sliders change
+            monthlyInvestment.addEventListener('input', function() {
+                monthlyInvestmentValue.textContent = formatter.format(this.value).replace('₹', '₹');
+                updateSliderFill(monthlyInvestment, monthlyInvestmentFill);
+                calculateSIP();
+            });
+
+            investmentPeriod.addEventListener('input', function() {
+                investmentPeriodValue.textContent = this.value;
+                updateSliderFill(investmentPeriod, investmentPeriodFill);
+                calculateSIP();
+            });
+
+            expectedReturn.addEventListener('input', function() {
+                expectedReturnValue.textContent = this.value + '%';
+                updateSliderFill(expectedReturn, expectedReturnFill);
+                calculateSIP();
+            });
+
+            // Tooltip functionality
+            document.querySelectorAll('input[type="range"], span[id$="Value"]').forEach(el => {
+                const tooltip = el.nextElementSibling?.querySelector('.tooltip');
+                if (!tooltip) return;
+                
+                el.addEventListener('mouseenter', () => {
+                    tooltip.style.opacity = '1';
+                });
+                el.addEventListener('mouseleave', () => {
+                    tooltip.style.opacity = '0';
+                });
+            });
+
+            // Calculate SIP when button is clicked
+            calculateBtn.addEventListener('click', function() {
+                // Add click animation
+                this.classList.add('animate__animated', 'animate__pulse');
+                setTimeout(() => {
+                    this.classList.remove('animate__animated', 'animate__pulse');
+                }, 1000);
+                
+                calculateSIP();
+            });
+
+            // Initial calculation on page load
+            calculateSIP();
+
+            function calculateSIP() {
+                const P = parseFloat(monthlyInvestment.value);
+                const n = parseFloat(investmentPeriod.value);
+                const r = parseFloat(expectedReturn.value) / 100 / 12; // Monthly rate
+                const months = n * 12;
+
+                // Calculate future value of SIP
+                const FV = P * (((Math.pow(1 + r, months) - 1) / r) * (1 + r));
+                
+                // Calculate invested amount
+                const totalInvested = P * months;
+                
+                // Calculate estimated returns
+                const returns = FV - totalInvested;
+                
+                // Update results with animation
+                animateValue(investedAmount, 0, totalInvested, 1000, formatter);
+                animateValue(estimatedReturns, 0, returns, 1000, formatter);
+                animateValue(totalValue, 0, FV, 1000, formatter);
+                
+                // Show result cards with animation
+                resultCards.forEach((card, index) => {
+                    card.classList.remove('show');
+                    setTimeout(() => {
+                        card.classList.add('show');
+                    }, index * 200);
+                });
+                
+                // Update chart
+                updateChart(n, totalInvested, returns, FV);
+            }
+
+            function animateValue(element, start, end, duration, formatter) {
+                let startTimestamp = null;
+                const step = (timestamp) => {
+                    if (!startTimestamp) startTimestamp = timestamp;
+                    const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                    const value = Math.floor(progress * (end - start) + start);
+                    element.textContent = formatter.format(value);
+                    if (progress < 1) {
+                        window.requestAnimationFrame(step);
+                    }
+                };
+                window.requestAnimationFrame(step);
+            }
+
+            function updateChart(years, invested, returns, total) {
+                // Clear previous chart
+                sipChart.innerHTML = '';
+                
+                // Create SVG element
+                const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                svg.setAttribute("width", "100%");
+                svg.setAttribute("height", "100%");
+                svg.setAttribute("viewBox", "0 0 400 250");
+                
+                // Create chart group
+                const chart = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                chart.setAttribute("transform", "translate(50,30)");
+                
+                // Calculate bar heights (max 180 units)
+                const maxValue = Math.max(invested, total);
+                const investedHeight = (invested / maxValue) * 180;
+                const returnsHeight = (returns / maxValue) * 180;
+                
+                // Create invested amount bar
+                const investedBar = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                investedBar.setAttribute("x", 50);
+                investedBar.setAttribute("y", 180 - investedHeight);
+                investedBar.setAttribute("width", 80);
+                investedBar.setAttribute("height", investedHeight);
+                investedBar.setAttribute("fill", "#3b82f6");
+                investedBar.setAttribute("rx", "4");
+                investedBar.classList.add("chart-bar");
+                investedBar.style.animationDelay = "0.2s";
+                
+                // Create returns bar
+                const returnsBar = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                returnsBar.setAttribute("x", 180);
+                returnsBar.setAttribute("y", 180 - returnsHeight);
+                returnsBar.setAttribute("width", 80);
+                returnsBar.setAttribute("height", returnsHeight);
+                returnsBar.setAttribute("fill", "#10b981");
+                returnsBar.setAttribute("rx", "4");
+                returnsBar.classList.add("chart-bar");
+                returnsBar.style.animationDelay = "0.4s";
+                
+                // Create total value bar
+                const totalBar = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                totalBar.setAttribute("x", 310);
+                totalBar.setAttribute("y", 180 - (total / maxValue) * 180);
+                totalBar.setAttribute("width", 80);
+                totalBar.setAttribute("height", (total / maxValue) * 180);
+                totalBar.setAttribute("fill", "#8b5cf6");
+                totalBar.setAttribute("rx", "4");
+                totalBar.classList.add("chart-bar");
+                totalBar.style.animationDelay = "0.6s";
+                
+                // Add bars to chart
+                chart.appendChild(investedBar);
+                chart.appendChild(returnsBar);
+                chart.appendChild(totalBar);
+                
+                // Add X-axis labels
+                const createLabel = (x, y, text, anchor = "middle") => {
+                    const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                    label.setAttribute("x", x);
+                    label.setAttribute("y", y);
+                    label.setAttribute("text-anchor", anchor);
+                    label.setAttribute("font-size", "12");
+                    label.setAttribute("fill", "#4b5563");
+                    label.textContent = text;
+                    return label;
+                };
+                
+                chart.appendChild(createLabel(90, 200, "Invested", "middle"));
+                chart.appendChild(createLabel(220, 200, "Returns", "middle"));
+                chart.appendChild(createLabel(350, 200, "Total", "middle"));
+                
+                // Add Y-axis
+                const yAxis = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                yAxis.setAttribute("x1", 0);
+                yAxis.setAttribute("y1", 180);
+                yAxis.setAttribute("x2", 0);
+                yAxis.setAttribute("y2", 0);
+                yAxis.setAttribute("stroke", "#d1d5db");
+                yAxis.setAttribute("stroke-width", "1");
+                chart.appendChild(yAxis);
+                
+                // Add X-axis
+                const xAxis = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                xAxis.setAttribute("x1", 0);
+                xAxis.setAttribute("y1", 180);
+                xAxis.setAttribute("x2", 400);
+                xAxis.setAttribute("y2", 180);
+                xAxis.setAttribute("stroke", "#d1d5db");
+                xAxis.setAttribute("stroke-width", "1");
+                chart.appendChild(xAxis);
+                
+                // Add value labels on bars
+                const createValueLabel = (x, y, value) => {
+                    const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                    label.setAttribute("x", x);
+                    label.setAttribute("y", y);
+                    label.setAttribute("text-anchor", "middle");
+                    label.setAttribute("font-size", "10");
+                    label.setAttribute("font-weight", "bold");
+                    label.setAttribute("fill", "white");
+                    label.textContent = formatter.format(value).replace('₹', '₹');
+                    return label;
+                };
+                
+                chart.appendChild(createValueLabel(90, 170 - investedHeight, invested));
+                chart.appendChild(createValueLabel(220, 170 - returnsHeight, returns));
+                chart.appendChild(createValueLabel(350, 170 - (total / maxValue) * 180, total));
+                
+                // Add chart title
+                const title = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                title.setAttribute("x", 200);
+                title.setAttribute("y", -10);
+                title.setAttribute("text-anchor", "middle");
+                title.setAttribute("font-size", "14");
+                title.setAttribute("font-weight", "bold");
+                title.setAttribute("fill", "#374151");
+                title.textContent = `Wealth Projection After ${years} Years`;
+                chart.appendChild(title);
+                
+                // Add chart to SVG
+                svg.appendChild(chart);
+                
+                // Add SVG to container
+                sipChart.appendChild(svg);
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF to JSON Converter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.12.313/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <style>
+        .dropzone {
+            transition: all 0.3s ease;
+        }
+        .dropzone.active {
+            border-color: #4f46e5;
+            background-color: #eef2ff;
+        }
+        .progress-bar {
+            transition: width 0.3s ease;
+        }
+        #json-output {
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .spinner {
+            animation: spin 1s linear infinite;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <header class="text-center mb-12">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-2">PDF to JSON Converter</h1>
+            <p class="text-gray-600 max-w-2xl mx-auto">Extract structured data from your PDF documents</p>
+        </header>
+
+        <main class="max-w-4xl mx-auto">
+            <div class="bg-white rounded-xl shadow-md overflow-hidden p-6 mb-8">
+                <div id="upload-section">
+                    <div class="dropzone border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer mb-6"
+                        id="dropzone">
+                        <div class="flex flex-col items-center justify-center space-y-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                            </svg>
+                            <h3 class="text-lg font-medium text-gray-700">Drag & drop your PDF file here</h3>
+                            <p class="text-sm text-gray-500">or click to browse files</p>
+                            <input type="file" id="file-input" accept=".pdf" class="hidden">
+                            <button id="browse-btn" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
+                                Select PDF File
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap items-center justify-center gap-4 mb-4">
+                        <div class="flex items-center">
+                            <input type="checkbox" id="include-metadata" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" checked>
+                            <label for="include-metadata" class="ml-2 block text-sm text-gray-700">Include metadata</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="group-by-page" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" checked>
+                            <label for="group-by-page" class="ml-2 block text-sm text-gray-700">Group by page</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="preserve-formatting" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                            <label for="preserve-formatting" class="ml-2 block text-sm text-gray-700">Preserve formatting</label>
+                        </div>
+                    </div>
+                    <div class="text-center text-sm text-gray-500">
+                        <p>Supported: PDF files (max file size: 10MB)</p>
+                    </div>
+                </div>
+
+                <div id="processing-section" class="hidden">
+                    <div class="text-center mb-6">
+                        <div class="inline-flex items-center justify-center w-16 h-16 bg-indigo-100 rounded-full mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-indigo-600 spinner" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-medium text-gray-700 mb-2">Processing your PDF</h3>
+                        <p class="text-gray-500" id="page-status">Extracting data from page 1...</p>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2.5 mb-6">
+                        <div id="progress-bar" class="progress-bar bg-indigo-600 h-2.5 rounded-full" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div id="result-section" class="hidden">
+                    <div class="text-center mb-6">
+                        <div class="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-medium text-gray-700 mb-2">Conversion Complete!</h3>
+                        <p class="text-gray-500 mb-4">Your JSON data is ready.</p>
+                        <div class="flex flex-wrap justify-center gap-3">
+                            <button id="copy-btn" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                </svg>
+                                Copy JSON
+                            </button>
+                            <button id="download-btn" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                </svg>
+                                Download JSON
+                            </button>
+                            <button id="new-file-btn" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors">
+                                New File
+                            </button>
+                            <button id="select-all-btn" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
+                                Select All
+                            </button>
+                        </div>
+                    </div>
+                    <div class="border rounded-lg overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-2 border-b flex justify-between items-center">
+                            <h4 class="font-medium text-gray-700">JSON Output</h4>
+                            <span id="file-info" class="text-sm text-gray-500"></span>
+                        </div>
+                        <pre id="json-output" class="p-4 bg-gray-800 text-green-400 text-sm overflow-auto"></pre>
+                    </div>
+                </div>
+
+                <div id="error-section" class="hidden p-4 bg-red-50 rounded-lg border border-red-200 text-red-700">
+                    <div class="flex items-start">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 mt-0.5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                        </svg>
+                        <div>
+                            <h4 class="font-medium" id="error-title">Error</h4>
+                            <p class="text-sm" id="error-message"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Set PDF.js worker path
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.12.313/pdf.worker.min.js';
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM elements
+            const dropzone = document.getElementById('dropzone');
+            const fileInput = document.getElementById('file-input');
+            const browseBtn = document.getElementById('browse-btn');
+            const uploadSection = document.getElementById('upload-section');
+            const processingSection = document.getElementById('processing-section');
+            const resultSection = document.getElementById('result-section');
+            const errorSection = document.getElementById('error-section');
+            const progressBar = document.getElementById('progress-bar');
+            const pageStatus = document.getElementById('page-status');
+            const jsonOutput = document.getElementById('json-output');
+            const fileInfo = document.getElementById('file-info');
+            const copyBtn = document.getElementById('copy-btn');
+            const downloadBtn = document.getElementById('download-btn');
+            const newFileBtn = document.getElementById('new-file-btn');
+            const selectAllBtn = document.getElementById('select-all-btn');
+            
+            // Variables
+            let pdfFile = null;
+            let jsonResult = '';
+
+            // Initialize event listeners
+            function initEventListeners() {
+                // File selection
+                browseBtn.addEventListener('click', () => fileInput.click());
+                fileInput.addEventListener('change', handleFileSelect);
+                
+                // Drag and drop events
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                    dropzone.addEventListener(eventName, preventDefaults, false);
+                    document.body.addEventListener(eventName, preventDefaults, false);
+                });
+
+                ['dragenter', 'dragover'].forEach(eventName => {
+                    dropzone.addEventListener(eventName, highlight, false);
+                });
+
+                ['dragleave', 'drop'].forEach(eventName => {
+                    dropzone.addEventListener(eventName, unhighlight, false);
+                });
+
+                dropzone.addEventListener('drop', handleDrop, false);
+
+                // Action buttons
+                copyBtn.addEventListener('click', copyToClipboard);
+                downloadBtn.addEventListener('click', downloadJSON);
+                newFileBtn.addEventListener('click', resetConverter);
+                selectAllBtn.addEventListener('click', selectAllText);
+            }
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            function highlight() {
+                dropzone.classList.add('active');
+            }
+
+            function unhighlight() {
+                dropzone.classList.remove('active');
+            }
+
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                if (files.length) {
+                    handleFileDrop(files);
+                }
+            }
+
+            // Main functions
+            function handleFileSelect(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    validateAndProcessFile(file);
+                }
+            }
+
+            function handleFileDrop(files) {
+                const file = files[0];
+                if (file) {
+                    validateAndProcessFile(file);
+                }
+            }
+
+            function validateAndProcessFile(file) {
+                // Reset UI
+                hideError();
+                
+                // Validate file
+                if (!file.type.includes('pdf') && !file.name.match(/\.pdf$/i)) {
+                    showError('Invalid File', 'Please upload a PDF file.');
+                    return;
+                }
+                
+                if (file.size > 10 * 1024 * 1024) {
+                    showError('File Too Large', 'Please upload a PDF file smaller than 10MB.');
+                    return;
+                }
+                
+                pdfFile = file;
+                processPDF(file);
+            }
+
+            async function processPDF(file) {
+                uploadSection.classList.add('hidden');
+                processingSection.classList.remove('hidden');
+                resultSection.classList.add('hidden');
+                
+                try {
+                    // Read the file
+                    const arrayBuffer = await file.arrayBuffer();
+                    
+                    // Load the PDF document
+                    const loadingTask = pdfjsLib.getDocument(arrayBuffer);
+                    const pdf = await loadingTask.promise;
+                    
+                    // Extract data from each page
+                    const result = {
+                        metadata: document.getElementById('include-metadata').checked ? await pdf.getMetadata() : null,
+                        pages: []
+                    };
+                    
+                    for (let i = 1; i <= pdf.numPages; i++) {
+                        pageStatus.textContent = `Extracting data from page ${i} of ${pdf.numPages}...`;
+                        updateProgress(((i - 1) / pdf.numPages) * 100);
+                        
+                        const page = await pdf.getPage(i);
+                        const textContent = await page.getTextContent();
+                        
+                        const pageData = {
+                            pageNumber: i,
+                            items: textContent.items.map(item => ({
+                                text: item.str,
+                                transform: item.transform
+                            }))
+                        };
+                        
+                        result.pages.push(pageData);
+                    }
+                    
+                    // Complete progress
+                    updateProgress(100);
+                    
+                    // Format and show results
+                    jsonResult = JSON.stringify(result, null, 2);
+                    showResults(file);
+                    
+                } catch (error) {
+                    console.error('Error processing PDF:', error);
+                    showError('Conversion Failed', 'An error occurred while processing the PDF file. ' + error.message);
+                    resetUI();
+                }
+            }
+
+            function showResults(file) {
+                processingSection.classList.add('hidden');
+                resultSection.classList.remove('hidden');
+                
+                // Display JSON output
+                jsonOutput.textContent = jsonResult;
+                fileInfo.textContent = `${file.name.replace(/\.pdf$/i, '')} (${formatFileSize(file.size)})`;
+            }
+
+            function formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+
+            function copyToClipboard() {
+                // Create a temporary textarea element
+                const textarea = document.createElement('textarea');
+                textarea.value = jsonResult;
+                textarea.style.position = 'fixed';  // Prevent scrolling to bottom
+                document.body.appendChild(textarea);
+                textarea.select();
+                
+                try {
+                    // Try using the modern Clipboard API first
+                    if (navigator.clipboard) {
+                        navigator.clipboard.writeText(jsonResult)
+                            .then(() => {
+                                showCopySuccess();
+                            })
+                            .catch(err => {
+                                // Fallback to execCommand if Clipboard API fails
+                                fallbackCopy();
+                            });
+                    } else {
+                        // Fallback for browsers that don't support Clipboard API
+                        fallbackCopy();
+                    }
+                } catch (err) {
+                    fallbackCopy();
+                } finally {
+                    document.body.removeChild(textarea);
+                }
+                
+                function fallbackCopy() {
+                    try {
+                        const successful = document.execCommand('copy');
+                        if (successful) {
+                            showCopySuccess();
+                        } else {
+                            throw new Error('Copy command failed');
+                        }
+                    } catch (err) {
+                        console.error('Fallback copy failed:', err);
+                        showError('Copy Failed', 'Could not copy text to clipboard. Please use "Select All" and copy manually (Ctrl+C or Command+C).');
+                    }
+                }
+                
+                function showCopySuccess() {
+                    const originalText = copyBtn.innerHTML;
+                    copyBtn.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                        Copied!
+                    `;
+                    setTimeout(() => {
+                        copyBtn.innerHTML = originalText;
+                    }, 2000);
+                }
+            }
+
+            function downloadJSON() {
+                try {
+                    // Check if jsonResult exists and is valid
+                    if (!jsonResult || typeof jsonResult !== 'string') {
+                        throw new Error('No JSON data available to download');
+                    }
+                    
+                    // Create a Blob with proper error handling
+                    let blob;
+                    try {
+                        blob = new Blob([jsonResult], { type: 'application/json;charset=utf-8' });
+                    } catch (e) {
+                        // Fallback for older browsers
+                        const blobBuilder = new (window.BlobBuilder || window.WebKitBlobBuilder || window.MozBlobBuilder)();
+                        blobBuilder.append(jsonResult);
+                        blob = blobBuilder.getBlob('application/json;charset=utf-8');
+                    }
+                    
+                    // Generate filename
+                    const fileName = pdfFile ? 
+                        pdfFile.name.replace(/\.pdf$/i, '') + '.json' : 
+                        'converted_data.json';
+                    
+                    // Use FileSaver.js with fallback
+                    if (typeof saveAs === 'function') {
+                        saveAs(blob, fileName);
+                    } else {
+                        // Fallback for browsers without FileSaver
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = fileName;
+                        document.body.appendChild(a);
+                        a.click();
+                        setTimeout(() => {
+                            document.body.removeChild(a);
+                            URL.revokeObjectURL(url);
+                        }, 100);
+                    }
+                } catch (error) {
+                    console.error('Error downloading JSON:', error);
+                    showError('Download Failed', 'Could not download JSON file. ' + error.message);
+                }
+            }
+
+            function selectAllText() {
+                const range = document.createRange();
+                range.selectNode(jsonOutput);
+                window.getSelection().removeAllRanges();
+                window.getSelection().addRange(range);
+                
+                // Show feedback
+                const originalText = selectAllBtn.textContent;
+                selectAllBtn.textContent = 'Selected!';
+                setTimeout(() => {
+                    selectAllBtn.textContent = originalText;
+                }, 2000);
+            }
+
+            function resetConverter() {
+                uploadSection.classList.remove('hidden');
+                processingSection.classList.add('hidden');
+                resultSection.classList.add('hidden');
+                progressBar.style.width = '0%';
+                fileInput.value = '';
+                pdfFile = null;
+                jsonResult = '';
+                jsonOutput.textContent = '';
+                fileInfo.textContent = '';
+                hideError();
+            }
+
+            function updateProgress(percent) {
+                progressBar.style.width = `${percent}%`;
+            }
+
+            function showError(title, message) {
+                document.getElementById('error-title').textContent = title;
+                document.getElementById('error-message').textContent = message;
+                errorSection.classList.remove('hidden');
+                
+                // Scroll to error message
+                errorSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+
+            function hideError() {
+                errorSection.classList.add('hidden');
+            }
+
+            // Initialize the app
+            initEventListeners();
+        });
+    </script>
+</body>
+</html>

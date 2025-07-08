@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meta Tag Extractor Tool</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .meta-tag {
+            transition: all 0.2s ease;
+        }
+        .meta-tag:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .loading-spinner {
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <header class="text-center mb-12">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-2">Meta Tag Extractor</h1>
+            <p class="text-gray-600 max-w-2xl mx-auto">Extract and analyze meta tags from any website URL</p>
+        </header>
+
+        <!-- Main Content -->
+        <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-md overflow-hidden">
+            <!-- Input Section -->
+            <div class="p-6 md:p-8 border-b border-gray-200">
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <input 
+                        type="url" 
+                        id="urlInput" 
+                        placeholder="Enter website URL (e.g., https://example.com)" 
+                        class="flex-grow px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        required
+                    >
+                    <button 
+                        id="extractBtn" 
+                        class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center min-w-[120px]"
+                    >
+                        <span id="btnText">Extract</span>
+                        <span id="spinner" class="hidden ml-2">
+                            <i class="fas fa-spinner loading-spinner"></i>
+                        </span>
+                    </button>
+                </div>
+                <div id="errorMessage" class="mt-2 text-sm text-red-600 hidden"></div>
+            </div>
+
+            <!-- Results Section -->
+            <div id="resultsSection" class="hidden p-6 md:p-8">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold text-gray-800">Extracted Meta Tags</h2>
+                    <button 
+                        id="copyAllBtn" 
+                        class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm flex items-center"
+                    >
+                        <i class="fas fa-copy mr-2"></i>
+                        Copy All
+                    </button>
+                </div>
+
+                <!-- Basic Info -->
+                <div class="mb-8">
+                    <h3 class="text-lg font-medium text-gray-700 mb-3 flex items-center">
+                        <i class="fas fa-info-circle text-blue-500 mr-2"></i>
+                        Basic Information
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                            <h4 class="text-sm font-medium text-gray-500 mb-1">Page Title</h4>
+                            <p id="pageTitle" class="text-gray-800 font-medium">-</p>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                            <h4 class="text-sm font-medium text-gray-500 mb-1">Canonical URL</h4>
+                            <p id="canonicalUrl" class="text-gray-800 font-medium">-</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SEO Meta Tags -->
+                <div class="mb-8">
+                    <h3 class="text-lg font-medium text-gray-700 mb-3 flex items-center">
+                        <i class="fas fa-search text-blue-500 mr-2"></i>
+                        SEO Meta Tags
+                    </h3>
+                    <div id="seoMetaTags" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Open Graph Tags -->
+                <div class="mb-8">
+                    <h3 class="text-lg font-medium text-gray-700 mb-3 flex items-center">
+                        <i class="fab fa-facebook text-blue-500 mr-2"></i>
+                        Open Graph Tags (Facebook)
+                    </h3>
+                    <div id="ogMetaTags" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Twitter Card Tags -->
+                <div class="mb-8">
+                    <h3 class="text-lg font-medium text-gray-700 mb-3 flex items-center">
+                        <i class="fab fa-twitter text-blue-500 mr-2"></i>
+                        Twitter Card Tags
+                    </h3>
+                    <div id="twitterMetaTags" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Other Meta Tags -->
+                <div>
+                    <h3 class="text-lg font-medium text-gray-700 mb-3 flex items-center">
+                        <i class="fas fa-tags text-blue-500 mr-2"></i>
+                        Other Meta Tags
+                    </h3>
+                    <div id="otherMetaTags" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Instructions -->
+        <div class="max-w-4xl mx-auto mt-8 bg-white rounded-xl shadow-md overflow-hidden p-6 md:p-8">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">How to use this tool</h2>
+            <div class="space-y-4">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0 h-6 w-6 rounded-full bg-blue-100 flex items-center justify-center mt-1 mr-3">
+                        <i class="fas fa-check text-blue-500 text-xs"></i>
+                    </div>
+                    <p class="text-gray-600">Enter any website URL in the input field above</p>
+                </div>
+                <div class="flex items-start">
+                    <div class="flex-shrink-0 h-6 w-6 rounded-full bg-blue-100 flex items-center justify-center mt-1 mr-3">
+                        <i class="fas fa-check text-blue-500 text-xs"></i>
+                    </div>
+                    <p class="text-gray-600">Click "Extract" to analyze the page's meta tags</p>
+                </div>
+                <div class="flex items-start">
+                    <div class="flex-shrink-0 h-6 w-6 rounded-full bg-blue-100 flex items-center justify-center mt-1 mr-3">
+                        <i class="fas fa-check text-blue-500 text-xs"></i>
+                    </div>
+                    <p class="text-gray-600">View the extracted meta tags organized by category</p>
+                </div>
+                <div class="flex items-start">
+                    <div class="flex-shrink-0 h-6 w-6 rounded-full bg-blue-100 flex items-center justify-center mt-1 mr-3">
+                        <i class="fas fa-check text-blue-500 text-xs"></i>
+                    </div>
+                    <p class="text-gray-600">Copy individual tags or all tags at once</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="mt-12 text-center text-gray-500 text-sm">
+            <p>Meta Tag Extractor Tool &copy; 2023 | All rights reserved</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM Elements
+            const urlInput = document.getElementById('urlInput');
+            const extractBtn = document.getElementById('extractBtn');
+            const btnText = document.getElementById('btnText');
+            const spinner = document.getElementById('spinner');
+            const errorMessage = document.getElementById('errorMessage');
+            const resultsSection = document.getElementById('resultsSection');
+            const copyAllBtn = document.getElementById('copyAllBtn');
+            const pageTitle = document.getElementById('pageTitle');
+            const canonicalUrl = document.getElementById('canonicalUrl');
+            const seoMetaTags = document.getElementById('seoMetaTags');
+            const ogMetaTags = document.getElementById('ogMetaTags');
+            const twitterMetaTags = document.getElementById('twitterMetaTags');
+            const otherMetaTags = document.getElementById('otherMetaTags');
+
+            // Extract meta tags when button is clicked
+            extractBtn.addEventListener('click', extractMetaTags);
+            
+            // Also extract when Enter key is pressed
+            urlInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    extractMetaTags();
+                }
+            });
+
+            // Copy all meta tags to clipboard
+            copyAllBtn.addEventListener('click', copyAllMetaTags);
+
+            async function extractMetaTags() {
+                const url = urlInput.value.trim();
+                
+                // Validate URL
+                if (!url) {
+                    showError('Please enter a URL');
+                    return;
+                }
+                
+                if (!isValidUrl(url)) {
+                    showError('Please enter a valid URL (e.g., https://example.com)');
+                    return;
+                }
+                
+                try {
+                    // Show loading state
+                    btnText.textContent = 'Extracting...';
+                    spinner.classList.remove('hidden');
+                    extractBtn.disabled = true;
+                    errorMessage.classList.add('hidden');
+                    
+                    // Use a proxy to avoid CORS issues
+                    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+                    const response = await fetch(proxyUrl);
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch the URL');
+                    }
+                    
+                    const data = await response.json();
+                    
+                    if (data.contents) {
+                        // Parse the HTML content
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(data.contents, 'text/html');
+                        
+                        // Extract meta tags
+                        extractAndDisplayMetaTags(doc);
+                        
+                        // Show results
+                        resultsSection.classList.remove('hidden');
+                    } else {
+                        throw new Error('No content received from the URL');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    showError('Failed to extract meta tags. Please check the URL and try again.');
+                } finally {
+                    // Reset button state
+                    btnText.textContent = 'Extract';
+                    spinner.classList.add('hidden');
+                    extractBtn.disabled = false;
+                }
+            }
+            
+            function extractAndDisplayMetaTags(doc) {
+                // Clear previous results
+                seoMetaTags.innerHTML = '';
+                ogMetaTags.innerHTML = '';
+                twitterMetaTags.innerHTML = '';
+                otherMetaTags.innerHTML = '';
+                
+                // Extract title
+                const title = doc.querySelector('title');
+                pageTitle.textContent = title ? title.textContent : 'Not found';
+                
+                // Extract canonical URL
+                const canonical = doc.querySelector('link[rel="canonical"]');
+                canonicalUrl.textContent = canonical ? canonical.getAttribute('href') : 'Not found';
+                
+                // Extract all meta tags
+                const metaTags = doc.querySelectorAll('meta');
+                
+                // Categorize meta tags
+                metaTags.forEach(meta => {
+                    const name = meta.getAttribute('name') || meta.getAttribute('property') || '';
+                    const content = meta.getAttribute('content') || '';
+                    
+                    if (!name && !content) return;
+                    
+                    // Create meta tag card
+                    const metaTagCard = document.createElement('div');
+                    metaTagCard.className = 'meta-tag bg-gray-50 p-4 rounded-lg border border-gray-200';
+                    
+                    const nameEl = document.createElement('h4');
+                    nameEl.className = 'text-sm font-medium text-gray-500 mb-1 truncate';
+                    nameEl.textContent = name || 'Unnamed meta tag';
+                    
+                    const contentEl = document.createElement('p');
+                    contentEl.className = 'text-gray-800 text-sm mb-2 break-words';
+                    contentEl.textContent = content;
+                    
+                    const copyBtn = document.createElement('button');
+                    copyBtn.className = 'text-xs text-blue-600 hover:text-blue-800 flex items-center';
+                    copyBtn.innerHTML = '<i class="fas fa-copy mr-1"></i> Copy';
+                    copyBtn.addEventListener('click', () => {
+                        navigator.clipboard.writeText(`${name ? `${name}: ` : ''}${content}`);
+                        copyBtn.innerHTML = '<i class="fas fa-check mr-1"></i> Copied!';
+                        setTimeout(() => {
+                            copyBtn.innerHTML = '<i class="fas fa-copy mr-1"></i> Copy';
+                        }, 2000);
+                    });
+                    
+                    metaTagCard.appendChild(nameEl);
+                    metaTagCard.appendChild(contentEl);
+                    metaTagCard.appendChild(copyBtn);
+                    
+                    // Categorize the meta tag
+                    if (name.startsWith('twitter:')) {
+                        twitterMetaTags.appendChild(metaTagCard);
+                    } else if (name.startsWith('og:')) {
+                        ogMetaTags.appendChild(metaTagCard);
+                    } else if (name.includes('description') || name.includes('keywords') || name.includes('robots') || name.includes('viewport')) {
+                        seoMetaTags.appendChild(metaTagCard);
+                    } else {
+                        otherMetaTags.appendChild(metaTagCard);
+                    }
+                });
+                
+                // If no tags found in a category, show message
+                if (seoMetaTags.children.length === 0) {
+                    seoMetaTags.innerHTML = '<p class="text-gray-500 col-span-3">No standard SEO meta tags found</p>';
+                }
+                if (ogMetaTags.children.length === 0) {
+                    ogMetaTags.innerHTML = '<p class="text-gray-500 col-span-3">No Open Graph meta tags found</p>';
+                }
+                if (twitterMetaTags.children.length === 0) {
+                    twitterMetaTags.innerHTML = '<p class="text-gray-500 col-span-3">No Twitter Card meta tags found</p>';
+                }
+                if (otherMetaTags.children.length === 0) {
+                    otherMetaTags.innerHTML = '<p class="text-gray-500 col-span-3">No other meta tags found</p>';
+                }
+            }
+            
+            function copyAllMetaTags() {
+                let allMetaTags = '';
+                
+                // Get page title
+                allMetaTags += `Title: ${pageTitle.textContent}\n\n`;
+                
+                // Get canonical URL
+                allMetaTags += `Canonical URL: ${canonicalUrl.textContent}\n\n`;
+                
+                // Get all meta tags
+                const sections = [seoMetaTags, ogMetaTags, twitterMetaTags, otherMetaTags];
+                const sectionNames = ['SEO Meta Tags', 'Open Graph Tags', 'Twitter Card Tags', 'Other Meta Tags'];
+                
+                sections.forEach((section, index) => {
+                    const metaTags = section.querySelectorAll('.meta-tag');
+                    if (metaTags.length > 0) {
+                        allMetaTags += `=== ${sectionNames[index]} ===\n`;
+                        metaTags.forEach(tag => {
+                            const name = tag.querySelector('h4').textContent;
+                            const content = tag.querySelector('p').textContent;
+                            allMetaTags += `${name}: ${content}\n`;
+                        });
+                        allMetaTags += '\n';
+                    }
+                });
+                
+                // Copy to clipboard
+                navigator.clipboard.writeText(allMetaTags).then(() => {
+                    copyAllBtn.innerHTML = '<i class="fas fa-check mr-2"></i> Copied!';
+                    setTimeout(() => {
+                        copyAllBtn.innerHTML = '<i class="fas fa-copy mr-2"></i> Copy All';
+                    }, 2000);
+                });
+            }
+            
+            function showError(message) {
+                errorMessage.textContent = message;
+                errorMessage.classList.remove('hidden');
+                resultsSection.classList.add('hidden');
+            }
+            
+            function isValidUrl(url) {
+                try {
+                    new URL(url);
+                    return true;
+                } catch (e) {
+                    return false;
+                }
+            }
+        });
+    </script>
+</body>
+</html>
