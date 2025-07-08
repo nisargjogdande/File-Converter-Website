@@ -1,4 +1,5 @@
 🔄 File Converter Website
+
 A multi-tool web platform for converting files between formats like PDF to Word, PDF to CSV, Image Compressor, and more. Built using HTML, Tailwind CSS, and JavaScript, the site features a modern UI and interactive tool cards, with plans for backend integration.
 
 🌟 Features
@@ -40,13 +41,3 @@ PDF Merger (planned)
 
 More tools in progress...
 
-🚀 Getting Started
-Clone the repository
-
-bash
-Copy
-Edit
-git clone https://github.com/your-username/file-converter-website.git
-Open index.html in your browser
-
-Click on any tool card to open its functionality
