@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Caesar Cipher | Encrypt & Decrypt Messages</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        textarea {
+            resize: none;
+            scrollbar-width: thin;
+            scrollbar-color: #3b82f6 #f1f5f9;
+        }
+        textarea::-webkit-scrollbar {
+            width: 8px;
+        }
+        textarea::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 10px;
+        }
+        textarea::-webkit-scrollbar-thumb {
+            background-color: #3b82f6;
+            border-radius: 10px;
+        }
+        .shift-btn {
+            transition: all 0.2s ease;
+        }
+        .shift-btn:hover {
+            transform: scale(1.05);
+        }
+        .shift-btn:active {
+            transform: scale(0.95);
+        }
+        .tab-button {
+            transition: all 0.3s ease;
+        }
+        .tab-button.active {
+            background-color: #3b82f6;
+            color: white;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-2xl animate-fade-in">
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-blue-600 to-blue-500 p-6 text-white">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h1 class="text-2xl font-bold">Caesar Cipher</h1>
+                        <p class="text-blue-100 mt-1">Encrypt and decrypt secret messages</p>
+                    </div>
+                    <i class="fas fa-lock text-2xl"></i>
+                </div>
+            </div>
+            
+            <!-- Main Content -->
+            <div class="p-6">
+                <!-- Tab Navigation -->
+                <div class="flex border-b border-gray-200 mb-6">
+                    <button id="encrypt-tab" class="tab-button active flex-1 py-3 px-4 text-center font-medium">
+                        <i class="fas fa-lock mr-2"></i> Encrypt
+                    </button>
+                    <button id="decrypt-tab" class="tab-button flex-1 py-3 px-4 text-center font-medium">
+                        <i class="fas fa-lock-open mr-2"></i> Decrypt
+                    </button>
+                </div>
+                
+                <!-- Shift Controls -->
+                <div class="mb-6 bg-blue-50 p-4 rounded-lg border border-blue-100">
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="block text-sm font-medium text-blue-800">Shift Amount</label>
+                        <span id="shift-value" class="text-sm font-bold text-blue-600">3</span>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <button id="decrease-shift" class="shift-btn bg-white p-2 rounded-full border border-gray-300 hover:bg-gray-100">
+                            <i class="fas fa-minus text-gray-600"></i>
+                        </button>
+                        <input type="range" id="shift-amount" min="1" max="25" value="3" 
+                            class="flex-1 h-2 bg-blue-200 rounded-lg appearance-none cursor-pointer">
+                        <button id="increase-shift" class="shift-btn bg-white p-2 rounded-full border border-gray-300 hover:bg-gray-100">
+                            <i class="fas fa-plus text-gray-600"></i>
+                        </button>
+                    </div>
+                    <div class="flex justify-between text-xs text-gray-500 mt-1">
+                        <span>1</span>
+                        <span>25</span>
+                    </div>
+                </div>
+                
+                <!-- Input/Output Area -->
+                <div class="grid grid-cols-1 gap-6 mb-6">
+                    <!-- Input -->
+                    <div>
+                        <label for="input-text" class="block text-sm font-medium text-gray-700 mb-2">
+                            <span id="input-label">Message to Encrypt</span>
+                        </label>
+                        <textarea id="input-text" rows="4" 
+                            class="block w-full p-4 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                            placeholder="Enter your message here..."></textarea>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="flex space-x-3">
+                        <button id="process-btn" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center">
+                            <i class="fas fa-exchange-alt mr-2"></i>
+                            <span id="process-btn-text">Encrypt Message</span>
+                        </button>
+                        <button id="copy-btn" class="px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg transition flex items-center justify-center">
+                            <i class="far fa-copy mr-2"></i>
+                            <span>Copy</span>
+                        </button>
+                        <button id="clear-btn" class="px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg transition flex items-center justify-center">
+                            <i class="fas fa-eraser mr-2"></i>
+                            <span>Clear</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Output -->
+                    <div>
+                        <label for="output-text" class="block text-sm font-medium text-gray-700 mb-2">
+                            <span id="output-label">Encrypted Message</span>
+                        </label>
+                        <textarea id="output-text" rows="4" readonly
+                            class="block w-full p-4 rounded-lg border border-gray-300 bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                            placeholder="Your result will appear here..."></textarea>
+                    </div>
+                </div>
+                
+                <!-- How It Works -->
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h3 class="text-sm font-medium text-gray-700 mb-2 flex items-center">
+                        <i class="fas fa-info-circle text-blue-500 mr-2"></i>
+                        How the Caesar Cipher Works
+                    </h3>
+                    <p class="text-xs text-gray-600">
+                        The Caesar cipher shifts each letter in your message by a fixed number down the alphabet. 
+                        For example, with a shift of 3: A → D, B → E, etc. Wraps around after Z. 
+                        Decryption reverses the process.
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Footer -->
+            <div class="bg-gray-50 px-6 py-4 text-center border-t border-gray-200">
+                <p class="text-xs text-gray-500">All processing happens in your browser - no data is stored or transmitted</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM Elements
+            const encryptTab = document.getElementById('encrypt-tab');
+            const decryptTab = document.getElementById('decrypt-tab');
+            const inputLabel = document.getElementById('input-label');
+            const outputLabel = document.getElementById('output-label');
+            const processBtn = document.getElementById('process-btn');
+            const processBtnText = document.getElementById('process-btn-text');
+            const inputText = document.getElementById('input-text');
+            const outputText = document.getElementById('output-text');
+            const copyBtn = document.getElementById('copy-btn');
+            const clearBtn = document.getElementById('clear-btn');
+            const shiftAmount = document.getElementById('shift-amount');
+            const shiftValue = document.getElementById('shift-value');
+            const decreaseShift = document.getElementById('decrease-shift');
+            const increaseShift = document.getElementById('increase-shift');
+            
+            // Tab switching
+            encryptTab.addEventListener('click', function() {
+                encryptTab.classList.add('active');
+                decryptTab.classList.remove('active');
+                inputLabel.textContent = 'Message to Encrypt';
+                outputLabel.textContent = 'Encrypted Message';
+                processBtnText.textContent = 'Encrypt Message';
+                processCipher();
+            });
+            
+            decryptTab.addEventListener('click', function() {
+                decryptTab.classList.add('active');
+                encryptTab.classList.remove('active');
+                inputLabel.textContent = 'Message to Decrypt';
+                outputLabel.textContent = 'Decrypted Message';
+                processBtnText.textContent = 'Decrypt Message';
+                processCipher();
+            });
+            
+            // Shift amount controls
+            shiftAmount.addEventListener('input', function() {
+                shiftValue.textContent = this.value;
+                processCipher();
+            });
+            
+            decreaseShift.addEventListener('click', function() {
+                if (shiftAmount.value > 1) {
+                    shiftAmount.value--;
+                    shiftValue.textContent = shiftAmount.value;
+                    processCipher();
+                }
+            });
+            
+            increaseShift.addEventListener('click', function() {
+                if (shiftAmount.value < 25) {
+                    shiftAmount.value++;
+                    shiftValue.textContent = shiftAmount.value;
+                    processCipher();
+                }
+            });
+            
+            // Process cipher
+            processBtn.addEventListener('click', processCipher);
+            
+            // Copy output
+            copyBtn.addEventListener('click', function() {
+                if (!outputText.value) return;
+                outputText.select();
+                document.execCommand('copy');
+                
+                // Change icon temporarily
+                const icon = this.querySelector('i');
+                icon.classList.remove('fa-copy');
+                icon.classList.add('fa-check');
+                
+                setTimeout(() => {
+                    icon.classList.remove('fa-check');
+                    icon.classList.add('fa-copy');
+                }, 2000);
+            });
+            
+            // Clear inputs
+            clearBtn.addEventListener('click', function() {
+                inputText.value = '';
+                outputText.value = '';
+            });
+            
+            // Auto-process when typing
+            inputText.addEventListener('input', processCipher);
+            
+            // Caesar cipher function
+            function processCipher() {
+                const text = inputText.value;
+                const shift = parseInt(shiftAmount.value);
+                const isEncrypt = encryptTab.classList.contains('active');
+                
+                if (!text) {
+                    outputText.value = '';
+                    return;
+                }
+                
+                let result = '';
+                
+                for (let i = 0; i < text.length; i++) {
+                    const char = text[i];
+                    
+                    if (char.match(/[a-z]/i)) {
+                        const code = text.charCodeAt(i);
+                        let shiftAmount = isEncrypt ? shift : (26 - shift);
+                        
+                        // Uppercase letters
+                        if (code >= 65 && code <= 90) {
+                            result += String.fromCharCode(((code - 65 + shiftAmount) % 26) + 65);
+                        }
+                        // Lowercase letters
+                        else if (code >= 97 && code <= 122) {
+                            result += String.fromCharCode(((code - 97 + shiftAmount) % 26) + 97);
+                        }
+                    } else {
+                        // Non-alphabetic characters remain unchanged
+                        result += char;
+                    }
+                }
+                
+                outputText.value = result;
+            }
+        });
+    </script>
+</body>
+</html>

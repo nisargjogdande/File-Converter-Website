@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compound Interest Calculator</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            --primary: #3b82f6;
+            --primary-light: #93c5fd;
+            --primary-dark: #2563eb;
+            --success: #10b981;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            min-height: 100vh;
+        }
+        
+        .calculator-container {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: perspective(1000px) translateY(0);
+        }
+        
+        .calculator-container:hover {
+            transform: perspective(1000px) translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        input[type="number"] {
+            transition: all 0.3s ease;
+        }
+        
+        input[type="number"]:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+        
+        input[type="range"] {
+            -webkit-appearance: none;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            background-image: linear-gradient(var(--primary), var(--primary));
+            background-size: 50% 100%;
+            background-repeat: no-repeat;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            box-shadow: 0 0 2px 0 #555;
+            transition: all 0.3s ease;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 5px rgba(59, 130, 246, 0.8);
+        }
+        
+        .calculate-btn {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background-image: linear-gradient(to right, var(--primary), #6366f1);
+            box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(59, 130, 246, 0.3);
+        }
+        
+        .calculate-btn:active {
+            transform: translateY(0);
+        }
+        
+        .calculate-btn::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: all 0.6s ease;
+        }
+        
+        .calculate-btn:hover::after {
+            left: 100%;
+        }
+        
+        .result-container {
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .result-card {
+            transition: all 0.3s ease;
+            background: rgba(59, 130, 246, 0.1);
+        }
+        
+        .result-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .chart-container {
+            height: 250px;
+            transition: all 0.3s ease;
+        }
+        
+        .tooltip {
+            position: relative;
+        }
+        
+        .tooltip::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e293b;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 10;
+            margin-bottom: 5px;
+        }
+        
+        .tooltip:hover::after {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        @media (max-width: 640px) {
+            .input-group {
+                flex-direction: column;
+            }
+            
+            .input-group > div {
+                width: 100%;
+            }
+            
+            .result-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4">
+    <div class="calculator-container w-full max-w-2xl bg-white rounded-xl shadow-md overflow-hidden p-6">
+        <div class="text-center mb-6">
+            <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">Compound Interest Calculator</h1>
+            <p class="text-gray-600">See how your money can grow over time</p>
+        </div>
+        
+        <!-- Calculator Form -->
+        <form class="space-y-6">
+            <div class="input-group flex space-x-4">
+                <div class="w-1/2">
+                    <label for="principal" class="block text-sm font-medium text-gray-700 mb-1">Initial Investment</label>
+                    <div class="flex">
+                        <select id="currency" class="px-3 py-2 border border-gray-300 rounded-l-md bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="USD">USD ($)</option>
+                            <option value="EUR">EUR (€)</option>
+                            <option value="GBP">GBP (£)</option>
+                            <option value="JPY">JPY (¥)</option>
+                            <option value="AUD">AUD (A$)</option>
+                            <option value="CAD">CAD (C$)</option>
+                            <option value="CHF">CHF (CHF)</option>
+                            <option value="CNY">CNY (¥)</option>
+                            <option value="HKD">HKD (HK$)</option>
+                            <option value="NZD">NZD (NZ$)</option>
+                            <option value="SEK">SEK (kr)</option>
+                            <option value="KRW">KRW (₩)</option>
+                            <option value="SGD">SGD (S$)</option>
+                            <option value="NOK">NOK (kr)</option>
+                            <option value="MXN">MXN (MX$)</option>
+                            <option value="INR">INR (₹)</option>
+                            <option value="BRL">BRL (R$)</option>
+                            <option value="ZAR">ZAR (R)</option>
+                            <option value="RUB">RUB (₽)</option>
+                            <option value="TRY">TRY (₺)</option>
+                        </select>
+                        <input type="number" id="principal" class="flex-1 px-4 py-2 border border-gray-300 rounded-r-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="1000" min="1" step="any">
+                    </div>
+                </div>
+                <div class="w-1/2">
+                    <label for="rate" class="block text-sm font-medium text-gray-700 mb-1">Annual Interest Rate (%)</label>
+                    <div class="relative">
+                        <input type="number" id="rate" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="5" min="0.01" max="100" step="0.01">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="input-group flex space-x-4">
+                <div class="w-1/2">
+                    <label for="years" class="block text-sm font-medium text-gray-700 mb-1">Time Period (Years)</label>
+                    <input type="number" id="years" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="10" min="1" max="100" step="1">
+                </div>
+                <div class="w-1/2">
+                    <label for="compound" class="block text-sm font-medium text-gray-700 mb-1">Compound Frequency</label>
+                    <select id="compound" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="1">Annually</option>
+                        <option value="2">Semi-Annually</option>
+                        <option value="4">Quarterly</option>
+                        <option value="12" selected>Monthly</option>
+                        <option value="52">Weekly</option>
+                        <option value="365">Daily</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div>
+                <label for="contribution" class="block text-sm font-medium text-gray-700 mb-1">Monthly Contribution</label>
+                <div class="flex">
+                    <span id="contribution-currency" class="px-3 py-2 border border-gray-300 rounded-l-md bg-gray-100">$</span>
+                    <input type="number" id="contribution" class="flex-1 px-4 py-2 border border-gray-300 rounded-r-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="100" min="0" step="any" value="0">
+                </div>
+            </div>
+            
+            <button type="button" id="calculate-btn" class="calculate-btn w-full text-white font-medium py-3 px-4 rounded-lg relative overflow-hidden">
+                Calculate
+            </button>
+        </form>
+        
+        <!-- Results Section -->
+        <div id="result-container" class="mt-6 hidden result-container">
+            <div class="border-t border-gray-200 pt-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    Your Results
+                </h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="result-card p-4 rounded-lg">
+                        <p class="text-sm text-gray-600 mb-1">Initial Investment</p>
+                        <p id="initial-investment" class="text-2xl font-bold text-blue-600">$0</p>
+                    </div>
+                    <div class="result-card p-4 rounded-lg">
+                        <p class="text-sm text-gray-600 mb-1">Total Contributions</p>
+                        <p id="total-contributions" class="text-2xl font-bold text-blue-600">$0</p>
+                    </div>
+                    <div class="result-card p-4 rounded-lg">
+                        <p class="text-sm text-gray-600 mb-1">Interest Earned</p>
+                        <p id="interest-earned" class="text-2xl font-bold text-blue-600">$0</p>
+                    </div>
+                </div>
+                
+                <div class="result-card p-4 rounded-lg mb-6">
+                    <p class="text-sm text-gray-600 mb-1">Final Balance</p>
+                    <p id="final-balance" class="text-3xl font-bold text-green-600">$0</p>
+                </div>
+                
+                <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                    <h3 class="font-medium text-gray-800 mb-2 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                        Growth Over Time
+                    </h3>
+                    <div class="chart-container mt-4" id="chart">
+                        <canvas id="growth-chart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <h3 class="font-medium text-gray-800 mb-2 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                        </svg>
+                        What does this mean?
+                    </h3>
+                    <p class="text-sm text-gray-600 mt-1">
+                        Compound interest is the interest on savings calculated on both the initial principal and the accumulated interest from previous periods. 
+                        The more frequently interest is compounded, the greater the return. Regular contributions can significantly boost your final balance over time.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+        // DOM Elements
+        const calculateBtn = document.getElementById('calculate-btn');
+        const resultContainer = document.getElementById('result-container');
+        const initialInvestmentEl = document.getElementById('initial-investment');
+        const totalContributionsEl = document.getElementById('total-contributions');
+        const interestEarnedEl = document.getElementById('interest-earned');
+        const finalBalanceEl = document.getElementById('final-balance');
+        const currencySelect = document.getElementById('currency');
+        const contributionCurrency = document.getElementById('contribution-currency');
+        let growthChart = null;
+        
+        // Currency symbols and formatting
+        const currencies = {
+            USD: { symbol: '$', name: 'US Dollar', locale: 'en-US' },
+            EUR: { symbol: '€', name: 'Euro', locale: 'de-DE' },
+            GBP: { symbol: '£', name: 'British Pound', locale: 'en-GB' },
+            JPY: { symbol: '¥', name: 'Japanese Yen', locale: 'ja-JP' },
+            AUD: { symbol: 'A$', name: 'Australian Dollar', locale: 'en-AU' },
+            CAD: { symbol: 'C$', name: 'Canadian Dollar', locale: 'en-CA' },
+            CHF: { symbol: 'CHF', name: 'Swiss Franc', locale: 'de-CH' },
+            CNY: { symbol: '¥', name: 'Chinese Yuan', locale: 'zh-CN' },
+            HKD: { symbol: 'HK$', name: 'Hong Kong Dollar', locale: 'en-HK' },
+            NZD: { symbol: 'NZ$', name: 'New Zealand Dollar', locale: 'en-NZ' },
+            SEK: { symbol: 'kr', name: 'Swedish Krona', locale: 'sv-SE' },
+            KRW: { symbol: '₩', name: 'South Korean Won', locale: 'ko-KR' },
+            SGD: { symbol: 'S$', name: 'Singapore Dollar', locale: 'en-SG' },
+            NOK: { symbol: 'kr', name: 'Norwegian Krone', locale: 'nb-NO' },
+            MXN: { symbol: 'MX$', name: 'Mexican Peso', locale: 'es-MX' },
+            INR: { symbol: '₹', name: 'Indian Rupee', locale: 'en-IN' },
+            BRL: { symbol: 'R$', name: 'Brazilian Real', locale: 'pt-BR' },
+            ZAR: { symbol: 'R', name: 'South African Rand', locale: 'en-ZA' },
+            RUB: { symbol: '₽', name: 'Russian Ruble', locale: 'ru-RU' },
+            TRY: { symbol: '₺', name: 'Turkish Lira', locale: 'tr-TR' }
+        };
+        
+        // Update currency symbol when selection changes
+        currencySelect.addEventListener('change', function() {
+            const currency = this.value;
+            contributionCurrency.textContent = currencies[currency].symbol;
+        });
+        
+        // Calculate compound interest with regular contributions
+        function calculateCompoundInterest(principal, rate, years, compoundFreq, monthlyContribution) {
+            const rateDecimal = rate / 100;
+            const periods = years * compoundFreq;
+            const periodicRate = rateDecimal / compoundFreq;
+            const periodicContribution = monthlyContribution * (12 / compoundFreq);
+            
+            let balance = principal;
+            let totalContributions = principal;
+            const yearlyData = [];
+            
+            // Calculate balance for each period
+            for (let i = 1; i <= periods; i++) {
+                balance = balance * (1 + periodicRate) + periodicContribution;
+                totalContributions += periodicContribution;
+                
+                // Record yearly data for chart
+                if (i % compoundFreq === 0 || i === periods) {
+                    const year = i / compoundFreq;
+                    yearlyData.push({
+                        year: parseFloat(year.toFixed(1)),
+                        balance: parseFloat(balance.toFixed(2)),
+                        contributions: parseFloat(totalContributions.toFixed(2))
+                    });
+                }
+            }
+            
+            const interestEarned = balance - totalContributions;
+            
+            return {
+                finalBalance: parseFloat(balance.toFixed(2)),
+                totalContributions: parseFloat(totalContributions.toFixed(2)),
+                interestEarned: parseFloat(interestEarned.toFixed(2)),
+                yearlyData
+            };
+        }
+        
+        // Format currency based on selected currency
+        function formatCurrency(amount) {
+            const currency = currencySelect.value;
+            const currencyInfo = currencies[currency];
+            
+            return new Intl.NumberFormat(currencyInfo.locale, {
+                style: 'currency',
+                currency: currency,
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(amount);
+        }
+        
+        // Create growth chart
+        function createChart(yearlyData) {
+            const ctx = document.getElementById('growth-chart').getContext('2d');
+            const currency = currencySelect.value;
+            const currencySymbol = currencies[currency].symbol;
+            
+            // Destroy previous chart if exists
+            if (growthChart) {
+                growthChart.destroy();
+            }
+            
+            const years = yearlyData.map(data => data.year);
+            const balances = yearlyData.map(data => data.balance);
+            const contributions = yearlyData.map(data => data.contributions);
+            
+            growthChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: years,
+                    datasets: [
+                        {
+                            label: 'Total Balance',
+                            data: balances,
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.1,
+                            fill: true
+                        },
+                        {
+                            label: 'Total Contributions',
+                            data: contributions,
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.1,
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return formatCurrency(value);
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += formatCurrency(context.parsed.y);
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Calculate button click handler
+        calculateBtn.addEventListener('click', () => {
+            // Get input values
+            const principal = parseFloat(document.getElementById('principal').value);
+            const rate = parseFloat(document.getElementById('rate').value);
+            const years = parseFloat(document.getElementById('years').value);
+            const compoundFreq = parseInt(document.getElementById('compound').value);
+            const monthlyContribution = parseFloat(document.getElementById('contribution').value) || 0;
+            const currency = currencySelect.value;
+            
+            // Validate inputs
+            if (!principal || !rate || !years || principal <= 0 || rate <= 0 || years <= 0) {
+                alert('Please enter valid values for all fields');
+                return;
+            }
+            
+            // Calculate results
+            const results = calculateCompoundInterest(principal, rate, years, compoundFreq, monthlyContribution);
+            
+            // Display results
+            initialInvestmentEl.textContent = formatCurrency(principal);
+            totalContributionsEl.textContent = formatCurrency(results.totalContributions);
+            interestEarnedEl.textContent = formatCurrency(results.interestEarned);
+            finalBalanceEl.textContent = formatCurrency(results.finalBalance);
+            
+            // Create chart
+            createChart(results.yearlyData);
+            
+            // Show results
+            resultContainer.classList.remove('hidden');
+            
+            // Scroll to results
+            resultContainer.scrollIntoView({ behavior: 'smooth' });
+        });
+    </script>
+</body>
+</html>

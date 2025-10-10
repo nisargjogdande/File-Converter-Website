@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Age Calculator</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            --primary: #3b82f6;
+            --primary-light: #93c5fd;
+            --primary-dark: #2563eb;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            min-height: 100vh;
+        }
+        
+        .age-container {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: perspective(1000px) translateY(0);
+        }
+        
+        .age-container:hover {
+            transform: perspective(1000px) translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        input[type="number"] {
+            transition: all 0.3s ease;
+        }
+        
+        input[type="number"]:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+        
+        .calculate-btn {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background-image: linear-gradient(to right, var(--primary), #6366f1);
+            box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(59, 130, 246, 0.3);
+        }
+        
+        .calculate-btn:active {
+            transform: translateY(0);
+        }
+        
+        .calculate-btn::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: all 0.6s ease;
+        }
+        
+        .calculate-btn:hover::after {
+            left: 100%;
+        }
+        
+        .result-container {
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .age-box {
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .age-box:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .age-value {
+            font-size: 2.5rem;
+            background: linear-gradient(to right, var(--primary), #6366f1);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.7);
+            transform: scale(0);
+            animation: ripple 0.6s linear;
+            pointer-events: none;
+        }
+        
+        @keyframes ripple {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+        
+        @media (max-width: 640px) {
+            .input-group {
+                flex-direction: column;
+            }
+            
+            .input-group > div {
+                width: 100%;
+            }
+            
+            .age-value {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4">
+    <div class="age-container w-full max-w-md bg-white rounded-xl shadow-md overflow-hidden p-6">
+        <div class="text-center mb-6">
+            <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+            </div>
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">Age Calculator</h1>
+            <p class="text-gray-600">Calculate your exact age in years, months, and days</p>
+        </div>
+        
+        <!-- Date Input Form -->
+        <form class="space-y-4">
+            <div class="input-group flex space-x-4">
+                <div class="w-1/3">
+                    <label for="day" class="block text-sm font-medium text-gray-700 mb-1">Day</label>
+                    <input type="number" id="day" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="DD" min="1" max="31">
+                </div>
+                <div class="w-1/3">
+                    <label for="month" class="block text-sm font-medium text-gray-700 mb-1">Month</label>
+                    <input type="number" id="month" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="MM" min="1" max="12">
+                </div>
+                <div class="w-1/3">
+                    <label for="year" class="block text-sm font-medium text-gray-700 mb-1">Year</label>
+                    <input type="number" id="year" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="YYYY" min="1900" max="2100">
+                </div>
+            </div>
+            
+            <button type="button" id="calculate-btn" class="calculate-btn w-full text-white font-medium py-3 px-4 rounded-lg relative overflow-hidden">
+                Calculate Age
+            </button>
+        </form>
+        
+        <!-- Results Section -->
+        <div id="result-container" class="mt-6 hidden result-container">
+            <div class="border-t border-gray-200 pt-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Your Age
+                </h2>
+                
+                <div class="grid grid-cols-3 gap-4 mb-6">
+                    <div class="age-box p-4 text-center">
+                        <p class="text-sm text-gray-600 mb-1">Years</p>
+                        <p id="years" class="age-value font-bold">--</p>
+                    </div>
+                    <div class="age-box p-4 text-center">
+                        <p class="text-sm text-gray-600 mb-1">Months</p>
+                        <p id="months" class="age-value font-bold">--</p>
+                    </div>
+                    <div class="age-box p-4 text-center">
+                        <p class="text-sm text-gray-600 mb-1">Days</p>
+                        <p id="days" class="age-value font-bold">--</p>
+                    </div>
+                </div>
+                
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <h3 class="font-medium text-gray-800 mb-2 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                        </svg>
+                        Date Information
+                    </h3>
+                    <p id="date-info" class="text-sm text-gray-600 mt-1">
+                        You were born on <span id="birth-date" class="font-medium">--/--/----</span>
+                    </p>
+                    <p id="next-birthday" class="text-sm text-gray-600 mt-1">
+                        Next birthday in <span id="days-until" class="font-medium">--</span> days
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const calculateBtn = document.getElementById('calculate-btn');
+        const resultContainer = document.getElementById('result-container');
+        const yearsElement = document.getElementById('years');
+        const monthsElement = document.getElementById('months');
+        const daysElement = document.getElementById('days');
+        const birthDateElement = document.getElementById('birth-date');
+        const daysUntilElement = document.getElementById('days-until');
+        
+        // Ripple effect for button
+        function createRipple(event) {
+            const button = event.currentTarget;
+            const circle = document.createElement('span');
+            const diameter = Math.max(button.clientWidth, button.clientHeight);
+            const radius = diameter / 2;
+            
+            circle.style.width = circle.style.height = `${diameter}px`;
+            circle.style.left = `${event.clientX - button.getBoundingClientRect().left - radius}px`;
+            circle.style.top = `${event.clientY - button.getBoundingClientRect().top - radius}px`;
+            circle.classList.add('ripple');
+            
+            const ripple = button.getElementsByClassName('ripple')[0];
+            if (ripple) {
+                ripple.remove();
+            }
+            
+            button.appendChild(circle);
+        }
+        
+        calculateBtn.addEventListener('click', createRipple);
+        
+        // Calculate Age
+        calculateBtn.addEventListener('click', () => {
+            const day = parseInt(document.getElementById('day').value);
+            const month = parseInt(document.getElementById('month').value);
+            const year = parseInt(document.getElementById('year').value);
+            
+            // Validate inputs
+            if (!day || !month || !year || day < 1 || day > 31 || month < 1 || month > 12 || year < 1900 || year > new Date().getFullYear()) {
+                showAlert('Please enter a valid date.', 'error');
+                return;
+            }
+            
+            // Check if date is valid
+            const birthDate = new Date(year, month - 1, day);
+            if (birthDate.getDate() !== day || birthDate.getMonth() + 1 !== month || birthDate.getFullYear() !== year) {
+                showAlert('Please enter a valid date.', 'error');
+                return;
+            }
+            
+            // Check if date is in the future
+            const today = new Date();
+            if (birthDate > today) {
+                showAlert('Birth date cannot be in the future.', 'error');
+                return;
+            }
+            
+            // Calculate age
+            const age = calculateAge(birthDate, today);
+            
+            // Display results
+            displayResults(age, birthDate);
+        });
+        
+        // Calculate age function
+        function calculateAge(birthDate, currentDate) {
+            let years = currentDate.getFullYear() - birthDate.getFullYear();
+            let months = currentDate.getMonth() - birthDate.getMonth();
+            let days = currentDate.getDate() - birthDate.getDate();
+            
+            // Adjust for negative months or days
+            if (months < 0 || (months === 0 && days < 0)) {
+                years--;
+                months += 12;
+            }
+            
+            if (days < 0) {
+                const lastMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
+                const daysInLastMonth = new Date(lastMonth.getFullYear(), lastMonth.getMonth() + 1, 0).getDate();
+                days += daysInLastMonth;
+                months--;
+            }
+            
+            return { years, months, days };
+        }
+        
+        // Calculate days until next birthday
+        function daysUntilNextBirthday(birthDate, currentDate) {
+            const currentYear = currentDate.getFullYear();
+            let nextBirthday = new Date(currentYear, birthDate.getMonth(), birthDate.getDate());
+            
+            // If birthday already passed this year, use next year
+            if (nextBirthday < currentDate) {
+                nextBirthday = new Date(currentYear + 1, birthDate.getMonth(), birthDate.getDate());
+            }
+            
+            // Calculate difference in days
+            const diffTime = nextBirthday - currentDate;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            return diffDays;
+        }
+        
+        // Display results
+        function displayResults(age, birthDate) {
+            resultContainer.classList.remove('hidden');
+            
+            // Animate the age values
+            animateValue(yearsElement, 0, age.years, 1000);
+            animateValue(monthsElement, 0, age.months, 1000);
+            animateValue(daysElement, 0, age.days, 1000);
+            
+            // Format birth date
+            const formattedDate = `${birthDate.getDate().toString().padStart(2, '0')}/${(birthDate.getMonth() + 1).toString().padStart(2, '0')}/${birthDate.getFullYear()}`;
+            birthDateElement.textContent = formattedDate;
+            
+            // Calculate days until next birthday
+            const today = new Date();
+            const daysUntil = daysUntilNextBirthday(birthDate, today);
+            daysUntilElement.textContent = daysUntil;
+            
+            // Scroll to results
+            resultContainer.scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // Helper function to animate numeric values
+        function animateValue(element, start, end, duration) {
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                const value = Math.floor(progress * (end - start) + start);
+                element.textContent = value;
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+        
+        // Helper function to show alerts
+        function showAlert(message, type = 'error') {
+            // Remove any existing alerts
+            const existingAlert = document.querySelector('.custom-alert');
+            if (existingAlert) existingAlert.remove();
+            
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `custom-alert fixed top-4 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-md shadow-lg text-white font-medium ${
+                type === 'error' ? 'bg-red-500' : 'bg-blue-500'
+            } z-50 transition-all duration-300 opacity-0`;
+            alertDiv.textContent = message;
+            
+            document.body.appendChild(alertDiv);
+            
+            // Fade in
+            setTimeout(() => {
+                alertDiv.classList.remove('opacity-0');
+                alertDiv.classList.add('opacity-100');
+            }, 10);
+            
+            // Auto remove after 3 seconds
+            setTimeout(() => {
+                alertDiv.classList.remove('opacity-100');
+                alertDiv.classList.add('opacity-0');
+                setTimeout(() => alertDiv.remove(), 300);
+            }, 3000);
+        }
+        
+        // Tooltip for age info
+        const ageInfo = document.createElement('div');
+        ageInfo.className = 'tooltip absolute top-4 right-4';
+        ageInfo.setAttribute('data-tooltip', 'Enter your birth date to calculate your exact age');
+        ageInfo.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+        `;
+        document.querySelector('.age-container').prepend(ageInfo);
+    </script>
+</body>
+</html>

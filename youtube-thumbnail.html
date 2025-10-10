@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Thumbnail Downloader</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        .animate-pulse {
+            animation: pulse 2s infinite;
+        }
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+        .tooltip .tooltip-text {
+            visibility: hidden;
+            width: 200px;
+            background-color: #1f2937;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 8px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 12px;
+        }
+        .tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+        .thumbnail-option:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        .loading-spinner {
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <header class="text-center mb-8 animate-fade-in">
+            <div class="flex justify-center mb-4">
+                <div class="bg-red-100 p-3 rounded-full">
+                    <i class="fas fa-play-circle text-red-600 text-4xl"></i>
+                </div>
+            </div>
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">YouTube Thumbnail Downloader</h1>
+            <p class="text-gray-600 max-w-md mx-auto">Get high-quality thumbnails from any YouTube video in multiple resolutions</p>
+        </header>
+
+        <!-- Main Content -->
+        <main class="max-w-2xl mx-auto">
+            <!-- Input Section -->
+            <div class="bg-white rounded-xl shadow-md p-6 mb-8 animate-fade-in">
+                <div class="mb-4">
+                    <label for="youtube-url" class="block text-sm font-medium text-gray-700 mb-2">
+                        YouTube Video URL
+                    </label>
+                    <div class="flex">
+                        <input 
+                            type="text" 
+                            id="youtube-url" 
+                            placeholder="https://www.youtube.com/watch?v=..." 
+                            class="flex-1 px-4 py-3 border border-gray-300 rounded-l-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition"
+                        >
+                        <button 
+                            id="fetch-btn" 
+                            class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-r-lg font-medium transition flex items-center justify-center min-w-32"
+                        >
+                            <span id="fetch-text">Get Thumbnail</span>
+                            <div id="fetch-spinner" class="loading-spinner ml-2 hidden"></div>
+                        </button>
+                    </div>
+                </div>
+                <div id="error-message" class="text-red-600 text-sm mt-2 hidden"></div>
+            </div>
+
+            <!-- Results Section -->
+            <div id="results-section" class="hidden animate-fade-in">
+                <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-4">Thumbnail Preview</h2>
+                    <div class="flex justify-center mb-6">
+                        <img id="thumbnail-preview" src="" alt="YouTube Thumbnail" class="max-w-full h-auto rounded-lg border border-gray-200 shadow-sm">
+                    </div>
+                    
+                    <h2 class="text-xl font-semibold text-gray-800 mb-4">Available Resolutions</h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <!-- Thumbnail options will be added here by JavaScript -->
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-4">How to Download</h2>
+                    <div class="space-y-4">
+                        <div class="flex items-start">
+                            <div class="bg-red-100 p-2 rounded-full mr-4">
+                                <i class="fas fa-mouse-pointer text-red-600"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-medium text-gray-800">1. Select Resolution</h3>
+                                <p class="text-gray-600 text-sm">Click on your preferred thumbnail resolution from the options above.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <div class="bg-red-100 p-2 rounded-full mr-4">
+                                <i class="fas fa-download text-red-600"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-medium text-gray-800">2. Download Thumbnail</h3>
+                                <p class="text-gray-600 text-sm">Right-click the image and select "Save image as..." to download.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Info Section -->
+            <div class="bg-white rounded-xl shadow-md p-6 mt-8 animate-fade-in">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">About This Tool</h2>
+                <div class="text-gray-600 space-y-3">
+                    <p>This free tool allows you to download high-quality thumbnails from any YouTube video. Simply paste the video URL and choose from multiple resolution options.</p>
+                    <p>Thumbnails are available in different qualities including:</p>
+                    <ul class="list-disc pl-5 space-y-1">
+                        <li>Maximum Resolution (1280×720)</li>
+                        <li>High Quality (480×360)</li>
+                        <li>Medium Quality (320×180)</li>
+                        <li>Standard Quality (120×90)</li>
+                    </ul>
+                    <p>No registration required - completely free to use!</p>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="text-center mt-12 text-gray-500 text-sm">
+            <p>© <span id="current-year"></span> YouTube Thumbnail Downloader. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set current year in footer
+            document.getElementById('current-year').textContent = new Date().getFullYear();
+
+            // DOM elements
+            const youtubeUrlInput = document.getElementById('youtube-url');
+            const fetchBtn = document.getElementById('fetch-btn');
+            const fetchText = document.getElementById('fetch-text');
+            const fetchSpinner = document.getElementById('fetch-spinner');
+            const errorMessage = document.getElementById('error-message');
+            const resultsSection = document.getElementById('results-section');
+            const thumbnailPreview = document.getElementById('thumbnail-preview');
+            const thumbnailOptionsContainer = document.querySelector('.grid');
+
+            // Extract video ID from URL
+            function extractVideoId(url) {
+                const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+                const match = url.match(regExp);
+                return (match && match[2].length === 11) ? match[2] : null;
+            }
+
+            // Generate thumbnail URLs
+            function getThumbnailUrls(videoId) {
+                return {
+                    maxres: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
+                    hq: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
+                    mq: `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`,
+                    sd: `https://img.youtube.com/vi/${videoId}/sddefault.jpg`,
+                    default: `https://img.youtube.com/vi/${videoId}/default.jpg`
+                };
+            }
+
+            // Create thumbnail option card
+            function createThumbnailOption(resolution, url, dimensions) {
+                const option = document.createElement('div');
+                option.className = 'thumbnail-option bg-gray-50 rounded-lg p-4 border border-gray-200 transition cursor-pointer hover:border-red-300';
+                option.innerHTML = `
+                    <div class="flex items-center mb-3">
+                        <div class="bg-red-100 p-2 rounded-full mr-3">
+                            <i class="fas fa-image text-red-600"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-medium text-gray-800">${resolution}</h3>
+                            <p class="text-xs text-gray-500">${dimensions}</p>
+                        </div>
+                    </div>
+                    <div class="relative pb-[56.25%] overflow-hidden rounded">
+                        <img src="${url}" alt="${resolution} thumbnail" class="absolute h-full w-full object-cover">
+                    </div>
+                    <div class="mt-3 flex justify-end">
+                        <a href="${url}" download="youtube-thumbnail-${resolution}.jpg" class="text-sm text-red-600 hover:text-red-700 font-medium flex items-center">
+                            Download <i class="fas fa-download ml-1"></i>
+                        </a>
+                    </div>
+                `;
+                return option;
+            }
+
+            // Show error message
+            function showError(message) {
+                errorMessage.textContent = message;
+                errorMessage.classList.remove('hidden');
+                setTimeout(() => {
+                    errorMessage.classList.add('hidden');
+                }, 5000);
+            }
+
+            // Fetch thumbnail
+            fetchBtn.addEventListener('click', function() {
+                const url = youtubeUrlInput.value.trim();
+                
+                if (!url) {
+                    showError('Please enter a YouTube video URL');
+                    return;
+                }
+
+                const videoId = extractVideoId(url);
+                if (!videoId) {
+                    showError('Invalid YouTube URL. Please check and try again.');
+                    return;
+                }
+
+                // Show loading state
+                fetchText.textContent = 'Processing...';
+                fetchSpinner.classList.remove('hidden');
+                fetchBtn.disabled = true;
+
+                // Get thumbnail URLs
+                const thumbnails = getThumbnailUrls(videoId);
+
+                // Check if maxres thumbnail exists
+                fetch(thumbnails.maxres)
+                    .then(response => {
+                        // Use maxres if available, otherwise use hqdefault
+                        const previewUrl = response.status === 200 ? thumbnails.maxres : thumbnails.hq;
+                        thumbnailPreview.src = previewUrl;
+
+                        // Create thumbnail options
+                        thumbnailOptionsContainer.innerHTML = '';
+                        
+                        // Max resolution option
+                        if (response.status === 200) {
+                            thumbnailOptionsContainer.appendChild(
+                                createThumbnailOption('Maximum Resolution', thumbnails.maxres, '1280×720')
+                            );
+                        }
+                        
+                        // Other resolution options
+                        thumbnailOptionsContainer.appendChild(
+                            createThumbnailOption('High Quality', thumbnails.hq, '480×360')
+                        );
+                        thumbnailOptionsContainer.appendChild(
+                            createThumbnailOption('Medium Quality', thumbnails.mq, '320×180')
+                        );
+                        thumbnailOptionsContainer.appendChild(
+                            createThumbnailOption('Standard Quality', thumbnails.default, '120×90')
+                        );
+
+                        // Show results section
+                        resultsSection.classList.remove('hidden');
+                        
+                        // Reset button state
+                        fetchText.textContent = 'Get Thumbnail';
+                        fetchSpinner.classList.add('hidden');
+                        fetchBtn.disabled = false;
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showError('An error occurred. Please try again.');
+                        fetchText.textContent = 'Get Thumbnail';
+                        fetchSpinner.classList.add('hidden');
+                        fetchBtn.disabled = false;
+                    });
+            });
+
+            // Allow pressing Enter key to fetch thumbnails
+            youtubeUrlInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    fetchBtn.click();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

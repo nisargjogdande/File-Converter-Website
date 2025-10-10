@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced PDF to Word Converter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.12.313/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/docx@7.8.2/build/index.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <style>
+        .dropzone {
+            transition: all 0.3s ease;
+        }
+        .dropzone.active {
+            border-color: #4f46e5;
+            background-color: #eef2ff;
+        }
+        .progress-bar {
+            transition: width 0.3s ease;
+        }
+        #text-preview {
+            max-height: 400px;
+            white-space: pre-wrap;
+        }
+        .loading-spinner {
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .page-break {
+            page-break-after: always;
+            border-bottom: 1px dashed #ccc;
+            margin: 20px 0;
+            padding-bottom: 20px;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <header class="text-center mb-12">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-2">Advanced PDF to Word Converter</h1>
+            <p class="text-gray-600 max-w-2xl mx-auto">Convert PDF documents to Word with preserved formatting and images</p>
+        </header>
+
+        <main class="max-w-4xl mx-auto">
+            <div class="bg-white rounded-xl shadow-md overflow-hidden p-6 mb-8">
+                <div id="upload-section">
+                    <div class="dropzone border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer mb-6"
+                        id="dropzone">
+                        <div class="flex flex-col items-center justify-center space-y-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                            </svg>
+                            <h3 class="text-lg font-medium text-gray-700">Drag & drop your PDF file here</h3>
+                            <p class="text-sm text-gray-500">or click to browse files</p>
+                            <input type="file" id="file-input" accept=".pdf" class="hidden">
+                            <button id="browse-btn" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
+                                Select PDF File
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap items-center justify-center gap-4 mb-4">
+                        <div class="flex items-center">
+                            <input type="checkbox" id="preserve-layout" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" checked>
+                            <label for="preserve-layout" class="ml-2 block text-sm text-gray-700">Preserve layout</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="include-images" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" checked>
+                            <label for="include-images" class="ml-2 block text-sm text-gray-700">Include images</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="preserve-headers" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" checked>
+                            <label for="preserve-headers" class="ml-2 block text-sm text-gray-700">Preserve headers</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="include-tables" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" checked>
+                            <label for="include-tables" class="ml-2 block text-sm text-gray-700">Include tables</label>
+                        </div>
+                    </div>
+                    <div class="text-center text-sm text-gray-500">
+                        <p>Supported: PDF files (max file size: 25MB)</p>
+                    </div>
+                </div>
+
+                <div id="processing-section" class="hidden">
+                    <div class="text-center mb-6">
+                        <div class="inline-flex items-center justify-center w-16 h-16 bg-indigo-100 rounded-full mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-indigo-600 loading-spinner" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-medium text-gray-700 mb-2">Processing your PDF</h3>
+                        <p class="text-gray-500" id="page-status">Extracting content from page 1...</p>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2.5 mb-6">
+                        <div id="progress-bar" class="progress-bar bg-indigo-600 h-2.5 rounded-full" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div id="result-section" class="hidden">
+                    <div class="text-center mb-6">
+                        <div class="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-medium text-gray-700 mb-2">Conversion Complete!</h3>
+                        <p class="text-gray-500 mb-4">Your Word document is ready to download.</p>
+                        <button id="download-btn" class="px-6 py-3 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors flex items-center justify-center mx-auto">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                            Download Word Document
+                        </button>
+                    </div>
+                    <div class="border rounded-lg overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-2 border-b flex justify-between items-center">
+                            <h4 class="font-medium text-gray-700">Content Preview</h4>
+                            <button id="copy-btn" class="text-sm text-indigo-600 hover:text-indigo-800 flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                </svg>
+                                Copy to Clipboard
+                            </button>
+                        </div>
+                        <div id="text-preview" class="p-4 text-sm text-gray-800 overflow-auto"></div>
+                    </div>
+                </div>
+
+                <div id="error-section" class="hidden p-4 bg-red-50 rounded-lg border border-red-200 text-red-700">
+                    <div class="flex items-start">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 mt-0.5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                        </svg>
+                        <div>
+                            <h4 class="font-medium" id="error-title">Error</h4>
+                            <p class="text-sm" id="error-message"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md overflow-hidden p-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">How to use this converter</h2>
+                <ol class="list-decimal list-inside space-y-3 text-gray-700">
+                    <li>Click "Select PDF File" or drag and drop your PDF file into the upload area</li>
+                    <li>Choose conversion options (layout preservation, images, headers, tables)</li>
+                    <li>Wait for the conversion process to complete</li>
+                    <li>Preview the extracted content</li>
+                    <li>Click "Download Word Document" to save the DOCX file</li>
+                </ol>
+                <div class="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200 text-blue-700">
+                    <div class="flex items-start">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 mt-0.5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                        </svg>
+                        <div>
+                            <p class="text-sm"><strong>Note:</strong> For best results with formatted documents, enable all options. Complex PDF layouts may still require minor adjustments in Word. Images will be included when the option is enabled.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="mt-16 text-center text-gray-500 text-sm">
+            <p>Advanced PDF to Word Converter - Preserves formatting and images | Works entirely in your browser</p>
+        </footer>
+    </div>
+
+    <script>
+        // Set PDF.js worker path
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.12.313/pdf.worker.min.js';
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM elements
+            const dropzone = document.getElementById('dropzone');
+            const fileInput = document.getElementById('file-input');
+            const browseBtn = document.getElementById('browse-btn');
+            const uploadSection = document.getElementById('upload-section');
+            const processingSection = document.getElementById('processing-section');
+            const resultSection = document.getElementById('result-section');
+            const errorSection = document.getElementById('error-section');
+            const progressBar = document.getElementById('progress-bar');
+            const pageStatus = document.getElementById('page-status');
+            const textPreview = document.getElementById('text-preview');
+            const downloadBtn = document.getElementById('download-btn');
+            const copyBtn = document.getElementById('copy-btn');
+            const preserveLayoutCheckbox = document.getElementById('preserve-layout');
+            const includeImagesCheckbox = document.getElementById('include-images');
+            const preserveHeadersCheckbox = document.getElementById('preserve-headers');
+            const includeTablesCheckbox = document.getElementById('include-tables');
+            
+            // Variables
+            let pdfFile = null;
+            let extractedContent = [];
+            let fileName = '';
+            let imagePromises = [];
+            let imageData = {};
+
+            // Event listeners
+            browseBtn.addEventListener('click', () => fileInput.click());
+            fileInput.addEventListener('change', handleFileSelect);
+            
+            // Drag and drop events
+            dropzone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropzone.classList.add('active');
+            });
+
+            dropzone.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                dropzone.classList.remove('active');
+            });
+
+            dropzone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropzone.classList.remove('active');
+                
+                if (e.dataTransfer.files.length) {
+                    handleFileDrop(e.dataTransfer.files);
+                }
+            });
+
+            downloadBtn.addEventListener('click', generateWordDocument);
+            copyBtn.addEventListener('click', copyToClipboard);
+
+            // Functions
+            function handleFileSelect(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    validateAndProcessFile(file);
+                }
+            }
+
+            function handleFileDrop(files) {
+                const file = files[0];
+                if (file) {
+                    validateAndProcessFile(file);
+                }
+            }
+
+            function validateAndProcessFile(file) {
+                // Reset UI
+                hideError();
+                
+                // Validate file
+                if (!file.type.match('application/pdf') && !file.name.match(/\.pdf$/i)) {
+                    showError('Invalid File', 'Please upload a PDF file.');
+                    return;
+                }
+                
+                if (file.size > 25 * 1024 * 1024) {
+                    showError('File Too Large', 'Please upload a PDF file smaller than 25MB.');
+                    return;
+                }
+                
+                pdfFile = file;
+                fileName = file.name.replace(/\.pdf$/i, '');
+                processPDF(file);
+            }
+
+            async function processPDF(file) {
+                uploadSection.classList.add('hidden');
+                processingSection.classList.remove('hidden');
+                resultSection.classList.add('hidden');
+                extractedContent = [];
+                imageData = {};
+                
+                try {
+                    // Read the file
+                    const arrayBuffer = await file.arrayBuffer();
+                    
+                    // Load the PDF document
+                    const loadingTask = pdfjsLib.getDocument(arrayBuffer);
+                    const pdf = await loadingTask.promise;
+                    
+                    // Extract content from each page
+                    for (let i = 1; i <= pdf.numPages; i++) {
+                        pageStatus.textContent = `Extracting content from page ${i} of ${pdf.numPages}...`;
+                        updateProgress(((i - 1) / pdf.numPages) * 100);
+                        
+                        const page = await pdf.getPage(i);
+                        const textContent = await page.getTextContent();
+                        const viewport = page.getViewport({ scale: 1.0 });
+                        
+                        // Extract text items with their styles and positions
+                        const textItems = textContent.items.map(item => {
+                            return {
+                                text: item.str,
+                                font: item.fontName,
+                                size: item.height,
+                                transform: item.transform,
+                                width: item.width,
+                                height: item.height,
+                                x: item.transform[4],
+                                y: viewport.height - item.transform[5]
+                            };
+                        });
+                        
+                        // Group text items by lines
+                        const lines = groupTextItemsIntoLines(textItems);
+                        
+                        // Extract images if enabled
+                        let images = [];
+                        if (includeImagesCheckbox.checked) {
+                            const opList = await page.getOperatorList();
+                            images = extractImagesFromOperatorList(opList, viewport);
+                            imagePromises = images.map(img => img.promise);
+                            
+                            // Wait for all images to be processed
+                            const resolvedImages = await Promise.all(imagePromises);
+                            resolvedImages.forEach((imgData, index) => {
+                                if (imgData) {
+                                    imageData[`page${i}_img${index}`] = imgData;
+                                }
+                            });
+                        }
+                        
+                        extractedContent.push({
+                            pageNumber: i,
+                            lines: lines,
+                            images: images.filter(img => img.promise && imageData[`page${i}_img${images.indexOf(img)}`]),
+                            viewport: viewport
+                        });
+                    }
+                    
+                    // Complete progress
+                    updateProgress(100);
+                    
+                    // Show results
+                    showResults();
+                    
+                } catch (error) {
+                    console.error('Error processing PDF:', error);
+                    showError('Conversion Failed', 'An error occurred while processing the PDF file. ' + error.message);
+                    resetUI();
+                }
+            }
+
+            function groupTextItemsIntoLines(textItems) {
+                // Sort text items by y position (top to bottom)
+                textItems.sort((a, b) => b.y - a.y);
+                
+                const lines = [];
+                let currentLine = null;
+                
+                textItems.forEach(item => {
+                    if (!currentLine || 
+                        Math.abs(item.y - currentLine.y) > (currentLine.maxHeight * 0.5) || 
+                        item.x < currentLine.x - currentLine.maxWidth) {
+                        // Start a new line
+                        currentLine = {
+                            text: item.text,
+                            x: item.x,
+                            y: item.y,
+                            items: [item],
+                            maxHeight: item.height,
+                            maxWidth: item.width
+                        };
+                        lines.push(currentLine);
+                    } else {
+                        // Add to current line
+                        currentLine.text += ' ' + item.text;
+                        currentLine.items.push(item);
+                        currentLine.maxHeight = Math.max(currentLine.maxHeight, item.height);
+                        currentLine.maxWidth = Math.max(currentLine.maxWidth, item.width);
+                    }
+                });
+                
+                return lines;
+            }
+
+            function extractImagesFromOperatorList(opList, viewport) {
+                const images = [];
+                const imgRegex = /^\/[A-Za-z0-9]+$/;
+                
+                for (let i = 0; i < opList.fnArray.length; i++) {
+                    if (opList.fnArray[i] === pdfjsLib.OPS.paintImageXObject) {
+                        const imgName = opList.argsArray[i][0];
+                        if (imgRegex.test(imgName)) {
+                            images.push({
+                                name: imgName,
+                                promise: new Promise((resolve) => {
+                                    opList.argsArray[i][1].then(img => {
+                                        const canvas = document.createElement('canvas');
+                                        const ctx = canvas.getContext('2d');
+                                        canvas.width = img.width;
+                                        canvas.height = img.height;
+                                        ctx.putImageData(img, 0, 0);
+                                        resolve({
+                                            dataUrl: canvas.toDataURL('image/png'),
+                                            width: img.width / viewport.width * 100,
+                                            height: img.height / viewport.height * 100,
+                                            x: 0, // Will be updated by the operator
+                                            y: 0  // Will be updated by the operator
+                                        });
+                                    });
+                                })
+                            });
+                        }
+                    }
+                }
+                
+                return images;
+            }
+
+            function showResults() {
+                processingSection.classList.add('hidden');
+                resultSection.classList.remove('hidden');
+                
+                // Display extracted content
+                textPreview.innerHTML = '';
+                
+                extractedContent.forEach(page => {
+                    const pageDiv = document.createElement('div');
+                    pageDiv.className = 'mb-6 pb-6 border-b border-gray-200 last:border-0';
+                    
+                    const pageHeader = document.createElement('h5');
+                    pageHeader.className = 'font-bold text-lg text-gray-700 mb-4';
+                    pageHeader.textContent = `Page ${page.pageNumber}`;
+                    pageDiv.appendChild(pageHeader);
+                    
+                    // Add page content
+                    const contentDiv = document.createElement('div');
+                    contentDiv.className = 'text-gray-800 space-y-3';
+                    
+                    // Add lines of text
+                    page.lines.forEach(line => {
+                        const lineDiv = document.createElement('div');
+                        lineDiv.style.marginLeft = `${line.x}px`;
+                        lineDiv.style.marginTop = `${5}px`; // Simplified spacing
+                        
+                        // Apply basic formatting based on text characteristics
+                        if (line.maxHeight > 15 || line.text.match(/^[A-Z][A-Z\s]+$/) || line.text.match(/^#\s/)) {
+                            lineDiv.className = 'font-bold text-lg';
+                        } else if (line.maxHeight < 10) {
+                            lineDiv.className = 'text-sm';
+                        }
+                        
+                        lineDiv.textContent = line.text;
+                        contentDiv.appendChild(lineDiv);
+                    });
+                    
+                    // Add images if they exist
+                    if (includeImagesCheckbox.checked && page.images.length > 0) {
+                        page.images.forEach((img, idx) => {
+                            const imgKey = `page${page.pageNumber}_img${idx}`;
+                            if (imageData[imgKey]) {
+                                const imgElement = document.createElement('img');
+                                imgElement.src = imageData[imgKey].dataUrl;
+                                imgElement.className = 'my-4 mx-auto';
+                                imgElement.style.maxWidth = '80%';
+                                imgElement.style.height = 'auto';
+                                contentDiv.appendChild(imgElement);
+                            }
+                        });
+                    }
+                    
+                    pageDiv.appendChild(contentDiv);
+                    textPreview.appendChild(pageDiv);
+                });
+            }
+
+            async function generateWordDocument() {
+                try {
+                    // Show loading state on download button
+                    const originalBtnText = downloadBtn.innerHTML;
+                    downloadBtn.innerHTML = `
+                        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Generating Document...
+                    `;
+                    downloadBtn.disabled = true;
+                    
+                    // Create a new Document
+                    const { Document, Paragraph, TextRun, HeadingLevel, Packer, ImageRun, Table, TableRow, TableCell, AlignmentType } = docx;
+                    
+                    // Prepare children for the document
+                    const children = [];
+                    
+                    // Process each page
+                    for (const page of extractedContent) {
+                        // Add page break if not first page
+                        if (page.pageNumber > 1) {
+                            children.push(new Paragraph({
+                                children: [new TextRun({ text: "", break: 1 })],
+                                spacing: { after: 400 }
+                            }));
+                        }
+                        
+                        // Add page header if enabled
+                        if (preserveHeadersCheckbox.checked) {
+                            children.push(new Paragraph({
+                                text: `Page ${page.pageNumber}`,
+                                heading: HeadingLevel.HEADING_2,
+                                spacing: { after: 200 }
+                            }));
+                        }
+                        
+                        // Process lines of text
+                        for (const line of page.lines) {
+                            // Determine if this is a heading
+                            const isHeading = line.maxHeight > 15 || 
+                                            line.text.match(/^[A-Z][A-Z\s]+$/) || 
+                                            line.text.match(/^#\s/) ||
+                                            line.text.match(/^[IVX]+\./) ||
+                                            line.text.match(/^\d+\./);
+                            
+                            // Determine if this is a table (simplified detection)
+                            const isTableRow = line.text.includes('|') && includeTablesCheckbox.checked;
+                            
+                            if (isTableRow) {
+                                // Simple table handling (for your index page)
+                                const cells = line.text.split('|').filter(cell => cell.trim() !== '');
+                                const tableRow = new TableRow({
+                                    children: cells.map(cell => new TableCell({
+                                        children: [new Paragraph({
+                                            children: [new TextRun({ text: cell.trim(), bold: cell.trim().match(/^[A-Z]/) })],
+                                            alignment: AlignmentType.CENTER
+                                        })]
+                                    }))
+                                });
+                                
+                                // Check if we need to create a new table
+                                if (children.length === 0 || !(children[children.length-1] instanceof Table)) {
+                                    children.push(new Table({
+                                        rows: [tableRow],
+                                        width: { size: 100, type: 'pct' }
+                                    }));
+                                } else {
+                                    children[children.length-1].root.push(tableRow);
+                                }
+                            } else if (isHeading && preserveHeadersCheckbox.checked) {
+                                // Add as heading
+                                children.push(new Paragraph({
+                                    text: line.text,
+                                    heading: HeadingLevel.HEADING_3,
+                                    spacing: { after: 150 }
+                                }));
+                            } else {
+                                // Add as regular text with preserved formatting
+                                const paragraph = new Paragraph({
+                                    children: [new TextRun({
+                                        text: line.text,
+                                        bold: line.maxHeight > 12,
+                                        size: line.maxHeight * 2 + 'pt'
+                                    })],
+                                    spacing: { after: 100 }
+                                });
+                                
+                                if (preserveLayoutCheckbox.checked) {
+                                    paragraph.indent = { left: line.x / 2 };
+                                }
+                                
+                                children.push(paragraph);
+                            }
+                        }
+                        
+                        // Add images if enabled
+                        if (includeImagesCheckbox.checked && page.images.length > 0) {
+                            for (let i = 0; i < page.images.length; i++) {
+                                const imgKey = `page${page.pageNumber}_img${i}`;
+                                if (imageData[imgKey]) {
+                                    children.push(new Paragraph({
+                                        children: [
+                                            new ImageRun({
+                                                data: imageData[imgKey].dataUrl.split(',')[1],
+                                                transformation: {
+                                                    width: imageData[imgKey].width * 20,
+                                                    height: imageData[imgKey].height * 20
+                                                }
+                                            })
+                                        ],
+                                        alignment: AlignmentType.CENTER
+                                    }));
+                                }
+                            }
+                        }
+                    }
+                    
+                    const doc = new Document({
+                        sections: [{
+                            properties: {},
+                            children: children
+                        }]
+                    });
+                    
+                    // Generate the DOCX file
+                    const blob = await Packer.toBlob(doc);
+                    
+                    // Save the file
+                    saveAs(blob, `${fileName}.docx`);
+                    
+                    // Restore button state
+                    downloadBtn.innerHTML = originalBtnText;
+                    downloadBtn.disabled = false;
+                    
+                } catch (error) {
+                    console.error('Error generating Word document:', error);
+                    showError('Conversion Failed', 'An error occurred while generating the Word document. ' + error.message);
+                    resetUI();
+                    
+                    // Restore button state even on error
+                    downloadBtn.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                        Download Word Document
+                    `;
+                    downloadBtn.disabled = false;
+                }
+            }
+
+            function copyToClipboard() {
+                const allText = extractedContent.map(page => {
+                    let pageText = `Page ${page.pageNumber}:\n`;
+                    pageText += page.lines.map(line => line.text).join('\n');
+                    return pageText;
+                }).join('\n\n');
+                
+                navigator.clipboard.writeText(allText)
+                    .then(() => {
+                        const originalText = copyBtn.innerHTML;
+                        copyBtn.innerHTML = `
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                            Copied!
+                        `;
+                        setTimeout(() => {
+                            copyBtn.innerHTML = originalText;
+                        }, 2000);
+                    })
+                    .catch(err => {
+                        console.error('Failed to copy: ', err);
+                        showError('Copy Failed', 'Could not copy text to clipboard. Please try again.');
+                    });
+            }
+
+            function updateProgress(percent) {
+                progressBar.style.width = `${percent}%`;
+            }
+
+            function showError(title, message) {
+                document.getElementById('error-title').textContent = title;
+                document.getElementById('error-message').textContent = message;
+                errorSection.classList.remove('hidden');
+                
+                // Scroll to error message
+                errorSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+
+            function hideError() {
+                errorSection.classList.add('hidden');
+            }
+
+            function resetUI() {
+                uploadSection.classList.remove('hidden');
+                processingSection.classList.add('hidden');
+                resultSection.classList.add('hidden');
+                progressBar.style.width = '0%';
+                fileInput.value = '';
+                pdfFile = null;
+                extractedContent = [];
+                imageData = {};
+            }
+        });
+    </script>
+</body>
+</html>

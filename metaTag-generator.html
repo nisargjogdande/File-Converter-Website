@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Meta Tag Generator | SEO & Social Media Optimization Tool</title>
+    <meta name="description" content="Free online meta tag generator tool to create perfect SEO and social media meta tags. Optimize your website for search engines and social sharing with our easy-to-use generator.">
+    <meta name="keywords" content="meta tag generator, SEO tool, social media meta tags, OpenGraph generator, Twitter card generator, HTML meta tags">
+    <meta name="author" content="SEOToolsPro">
+    <meta property="og:title" content="Advanced Meta Tag Generator | SEO & Social Media Optimization Tool">
+    <meta property="og:description" content="Create perfect meta tags for SEO and social media sharing with our free online generator.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://yoursite.com/meta-tag-generator">
+    <meta property="og:image" content="https://yoursite.com/images/meta-tag-generator-preview.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-light: #818cf8;
+            --primary-dark: #3730a3;
+            --secondary: #10b981;
+            --accent: #f59e0b;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+            min-height: 100vh;
+        }
+        
+        h1, h2, h3, h4 {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+        }
+        
+        .card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(79, 70, 229, 0.2);
+        }
+        
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(79, 70, 229, 0.3);
+        }
+        
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .animate-pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        .tab-button {
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .tab-button::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 3px;
+            background: var(--primary);
+            transition: all 0.3s ease;
+        }
+        
+        .tab-button.active {
+            color: var(--primary);
+        }
+        
+        .tab-button.active::after {
+            width: 100%;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .loading-spinner {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .meta-code {
+            font-family: 'Courier New', Courier, monospace;
+            tab-size: 2;
+        }
+        
+        .copy-btn:hover .copy-icon {
+            transform: scale(1.1);
+        }
+        
+        .copy-icon {
+            transition: transform 0.2s ease;
+        }
+        
+        .highlight-box {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .highlight-box::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(79, 70, 229, 0.1), transparent);
+            transition: all 0.6s;
+        }
+        
+        .highlight-box:hover::after {
+            left: 100%;
+        }
+        
+        .checkmark {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: block;
+            stroke-width: 3;
+            stroke: #fff;
+            stroke-miterlimit: 10;
+            margin: 0 auto;
+            box-shadow: inset 0px 0px 0px #10b981;
+            animation: fill-checkmark 0.4s ease-in-out 0.4s forwards, scale-checkmark 0.3s ease-in-out 0.9s both;
+        }
+        
+        .checkmark-circle {
+            stroke-dasharray: 166;
+            stroke-dashoffset: 166;
+            stroke-width: 3;
+            stroke-miterlimit: 10;
+            stroke: #10b981;
+            fill: none;
+            animation: stroke-checkmark 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+        }
+        
+        .checkmark-check {
+            transform-origin: 50% 50%;
+            stroke-dasharray: 48;
+            stroke-dashoffset: 48;
+            animation: stroke-checkmark 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards;
+        }
+        
+        @keyframes stroke-checkmark {
+            100% { stroke-dashoffset: 0; }
+        }
+        
+        @keyframes scale-checkmark {
+            0%, 100% { transform: none; }
+            50% { transform: scale3d(1.1, 1.1, 1); }
+        }
+        
+        @keyframes fill-checkmark {
+            100% { box-shadow: inset 0px 0px 0px 30px #10b981; }
+        }
+        
+        .floating-label {
+            position: absolute;
+            top: -10px;
+            left: 10px;
+            background: white;
+            padding: 0 5px;
+            font-size: 12px;
+            color: #64748b;
+            transition: all 0.3s ease;
+        }
+        
+        .input-group {
+            position: relative;
+            margin-top: 10px;
+        }
+        
+        .input-group input, .input-group select, .input-group textarea {
+            transition: all 0.3s ease;
+        }
+        
+        .input-group input:focus, .input-group select:focus, .input-group textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+        }
+        
+        .success-message {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.4s ease;
+        }
+        
+        .success-message.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .tooltip {
+            position: relative;
+        }
+        
+        .tooltip::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e293b;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 10;
+            margin-bottom: 5px;
+        }
+        
+        .tooltip:hover::after {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .character-count {
+            position: absolute;
+            right: 10px;
+            bottom: 10px;
+            font-size: 12px;
+            color: #64748b;
+        }
+        
+        .character-count.warning {
+            color: #f59e0b;
+        }
+        
+        .character-count.error {
+            color: #ef4444;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Navigation -->
+    <nav class="gradient-bg text-white shadow-lg">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-code text-2xl"></i>
+                <span class="text-xl font-bold">SEOTools<span class="text-accent">Pro</span></span>
+            </div>
+            <div class="hidden md:flex space-x-6">
+                <a href="#" class="hover:text-accent transition">Tools</a>
+                <a href="#" class="hover:text-accent transition">Resources</a>
+                <a href="#" class="hover:text-accent transition">Blog</a>
+                <a href="#" class="hover:text-accent transition">Pricing</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="gradient-bg text-white py-16">
+        <div class="container mx-auto px-4 text-center">
+            <div class="max-w-3xl mx-auto animate-fade-in">
+                <div class="flex justify-center mb-6">
+                    <div class="bg-white/20 p-4 rounded-full">
+                        <i class="fas fa-code text-4xl"></i>
+                    </div>
+                </div>
+                <h1 class="text-4xl md:text-5xl font-bold mb-4">Meta Tag Generator</h1>
+                <p class="text-xl text-blue-100 mb-8">Create perfect meta tags for SEO and social media sharing</p>
+                <div class="flex justify-center space-x-4">
+                    <a href="#generator" class="btn-primary px-6 py-3 rounded-lg flex items-center animate-pulse">
+                        <i class="fas fa-magic mr-2"></i> Generate Now
+                    </a>
+                    <button class="px-6 py-3 rounded-lg border border-white/30 hover:bg-white/10 transition">
+                        <i class="fas fa-play-circle mr-2"></i> Watch Demo
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 py-8 -mt-10">
+        <!-- Generator Section -->
+        <div id="generator" class="max-w-4xl mx-auto">
+            <!-- Generator Card -->
+            <div class="card p-6 mb-8 animate-fade-in highlight-box">
+                <div class="flex flex-col space-y-6">
+                    <!-- Header -->
+                    <div class="text-center mb-2">
+                        <h2 class="text-2xl font-semibold text-gray-800">Configure Your Meta Tags</h2>
+                        <p class="text-gray-600">Optimize your website for search engines and social media</p>
+                    </div>
+                    
+                    <!-- Tabs -->
+                    <div class="flex border-b border-gray-200">
+                        <button id="basic-tab" class="tab-button active px-4 py-2" data-tab="basic">Basic Meta Tags</button>
+                        <button id="social-tab" class="tab-button px-4 py-2" data-tab="social">Social Media</button>
+                        <button id="advanced-tab" class="tab-button px-4 py-2" data-tab="advanced">Advanced</button>
+                    </div>
+
+                    <!-- Input Sections -->
+                    <div class="pt-2">
+                        <!-- Basic Meta Tags -->
+                        <div id="basic-tab-content" class="tab-content active space-y-4">
+                            <div class="input-group">
+                                <label class="floating-label">Page Title</label>
+                                <input 
+                                    type="text" 
+                                    id="page-title" 
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary" 
+                                    placeholder="My Awesome Page"
+                                >
+                                <p class="text-xs text-gray-500 mt-1">Appears in search results and browser tabs (50-60 chars ideal)</p>
+                            </div>
+                            <div class="input-group">
+                                <label class="floating-label">Description</label>
+                                <textarea 
+                                    id="page-description" 
+                                    rows="3" 
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary" 
+                                    placeholder="A brief description of your page content"
+                                ></textarea>
+                                <div class="character-count" id="description-count">0/160</div>
+                                <p class="text-xs text-gray-500 mt-1">Appears in search results (150-160 chars ideal)</p>
+                            </div>
+                            <div class="input-group">
+                                <label class="floating-label">Keywords (optional)</label>
+                                <input 
+                                    type="text" 
+                                    id="page-keywords" 
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary" 
+                                    placeholder="keyword1, keyword2, keyword3"
+                                >
+                                <p class="text-xs text-gray-500 mt-1">Separate with commas (not as important for SEO as it once was)</p>
+                            </div>
+                            <div class="input-group">
+                                <label class="floating-label">Author (optional)</label>
+                                <input 
+                                    type="text" 
+                                    id="page-author" 
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary" 
+                                    placeholder="Author Name"
+                                >
+                            </div>
+                        </div>
+
+                        <!-- Social Media Meta Tags -->
+                        <div id="social-tab-content" class="tab-content space-y-4">
+                            <div class="input-group">
+                                <label class="floating-label">OpenGraph Title</label>
+                                <input 
+                                    type="text" 
+                                    id="og-title" 
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary" 
+                                    placeholder="My Awesome Page"
+                                >
+                                <p class="text-xs text-gray-500 mt-1">Title for social media sharing (defaults to page title)</p>
+                            </div>
+                            <div class="input-group">
+                                <label class="floating-label">OpenGraph Description</label>
+                                <textarea 
+                                    id="og-description" 
+                                    rows="3" 
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary" 
+                                    placeholder="A brief description for social media"
+                                ></textarea>
+                                <div class="character-count" id="og-description-count">0/160</div>
+                                <p class="text-xs text-gray-500 mt-1">Description for social media sharing (defaults to page description)</p>
+                            </div>
+                            <div class="input-group">
+                                <label class="floating-label">Canonical URL</label>
+                                <input 
+                                    type="url" 
+                                    id="og-url" 
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary" 
+                                    placeholder="https://example.com/my-page"
+                                >
+                            </div>
+                            <div class="input-group">
+                                <label class="floating-label">Social Media Image URL</label>
+                                <input 
+                                    type="url" 
+                                    id="og-image" 
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary" 
+                                    placeholder="https://example.com/image.jpg"
+                                >
+                                <p class="text-xs text-gray-500 mt-1">Recommended size: 1200×630 pixels</p>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="input-group">
+                                    <label class="floating-label">OpenGraph Type</label>
+                                    <select 
+                                        id="og-type" 
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary"
+                                    >
+                                        <option value="website">Website</option>
+                                        <option value="article">Article</option>
+                                        <option value="product">Product</option>
+                                        <option value="profile">Profile</option>
+                                    </select>
+                                </div>
+                                <div class="input-group">
+                                    <label class="floating-label">Twitter Card Type</label>
+                                    <select 
+                                        id="twitter-card" 
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary"
+                                    >
+                                        <option value="summary">Summary</option>
+                                        <option value="summary_large_image">Summary with Large Image</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Advanced Meta Tags -->
+                        <div id="advanced-tab-content" class="tab-content space-y-4">
+                            <div class="input-group">
+                                <label class="floating-label">Viewport</label>
+                                <input 
+                                    type="text" 
+                                    id="viewport" 
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary" 
+                                    value="width=device-width, initial-scale=1.0"
+                                >
+                            </div>
+                            <div class="input-group">
+                                <label class="floating-label">Charset</label>
+                                <input 
+                                    type="text" 
+                                    id="charset" 
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary" 
+                                    value="UTF-8"
+                                >
+                            </div>
+                            <div class="input-group">
+                                <label class="floating-label">Robots</label>
+                                <select 
+                                    id="robots" 
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-primary"
+                                >
+                                    <option value="index, follow">index, follow</option>
+                                    <option value="noindex, nofollow">noindex, nofollow</option>
+                                    <option value="index, nofollow">index, nofollow</option>
+                                    <option value="noindex, follow">noindex, follow</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label class="floating-label">Theme Color</label>
+                                <div class="flex items-center space-x-4">
+                                    <input 
+                                        type="color" 
+                                        id="theme-color" 
+                                        class="w-16 h-10 border border-gray-300 rounded-lg cursor-pointer" 
+                                        value="#4f46e5"
+                                    >
+                                    <span id="theme-color-value" class="text-sm text-gray-600">#4f46e5</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Generate Button -->
+                    <div class="flex justify-center pt-4">
+                        <button 
+                            id="generateBtn" 
+                            class="btn-primary px-8 py-4 rounded-lg flex items-center justify-center min-w-[220px] text-lg"
+                        >
+                            <i class="fas fa-code mr-3"></i>
+                            <span id="btnText">Generate Meta Tags</span>
+                            <span id="spinner" class="hidden ml-2">
+                                <i class="fas fa-spinner loading-spinner"></i>
+                            </span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            <div id="resultsSection" class="hidden animate-fade-in">
+                <div class="card p-6">
+                    <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-6">
+                        <div>
+                            <h3 class="text-xl font-semibold text-gray-800 mb-1">Your Generated Meta Tags</h3>
+                            <p class="text-gray-600">Copy and paste these into your HTML &lt;head&gt; section</p>
+                        </div>
+                        <div class="flex space-x-3 mt-4 md:mt-0">
+                            <button 
+                                id="copy-btn" 
+                                class="px-5 py-2.5 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center"
+                            >
+                                <i class="fas fa-copy mr-2"></i> Copy
+                            </button>
+                            <button 
+                                id="download-btn" 
+                                class="btn-primary px-5 py-2.5 rounded-lg text-sm font-medium flex items-center"
+                            >
+                                <i class="fas fa-download mr-2"></i> Download
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-800 rounded-lg p-5 overflow-x-auto">
+                        <pre id="meta-output" class="text-green-400 text-sm meta-code"><!-- Meta tags will be generated here --></pre>
+                    </div>
+                    
+                    <div id="successMessage" class="success-message mt-4 p-4 bg-green-50 border border-green-200 rounded-lg flex items-start">
+                        <div class="mr-3">
+                            <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                                <circle class="checkmark-circle" cx="26" cy="26" r="25" fill="none"/>
+                                <path class="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="text-green-800 font-medium mb-1">Success!</h4>
+                            <p class="text-green-700 text-sm">Your meta tags have been generated. Place these in the &lt;head&gt; section of your HTML document.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Features Section -->
+        <section class="py-12">
+            <div class="max-w-6xl mx-auto">
+                <h2 class="text-3xl font-bold text-center mb-12">Why Meta Tags Matter</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="card p-6 hover:shadow-lg transition">
+                        <div class="text-blue-600 text-3xl mb-4">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-2">Search Engine Visibility</h3>
+                        <p class="text-gray-600">Proper meta tags help search engines understand your content, improving your rankings and click-through rates.</p>
+                    </div>
+                    <div class="card p-6 hover:shadow-lg transition">
+                        <div class="text-green-600 text-3xl mb-4">
+                            <i class="fas fa-share-alt"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-2">Social Media Sharing</h3>
+                        <p class="text-gray-600">OpenGraph and Twitter Card tags ensure your content looks great when shared on social platforms.</p>
+                    </div>
+                    <div class="card p-6 hover:shadow-lg transition">
+                        <div class="text-purple-600 text-3xl mb-4">
+                            <i class="fas fa-mobile-alt"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-2">Mobile Optimization</h3>
+                        <p class="text-gray-600">Viewport and theme color tags ensure your website looks perfect on all devices and browsers.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Testimonials -->
+        <section class="py-12 bg-gray-50">
+            <div class="max-w-6xl mx-auto">
+                <h2 class="text-3xl font-bold text-center mb-12">What Our Users Say</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="card p-6">
+                        <div class="flex items-center mb-4">
+                            <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mr-4">
+                                <i class="fas fa-user-tie text-blue-600"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold">Sarah Johnson</h4>
+                                <p class="text-sm text-gray-500">SEO Consultant</p>
+                            </div>
+                        </div>
+                        <p class="text-gray-600">"This tool has saved me countless hours. The ability to generate perfect meta tags for both SEO and social media in one place is invaluable."</p>
+                        <div class="flex mt-4 text-yellow-400">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                    </div>
+                    <div class="card p-6">
+                        <div class="flex items-center mb-4">
+                            <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mr-4">
+                                <i class="fas fa-code text-green-600"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold">Michael Chen</h4>
+                                <p class="text-sm text-gray-500">Web Developer</p>
+                            </div>
+                        </div>
+                        <p class="text-gray-600">"As a developer, I appreciate how this tool generates clean, properly formatted meta tags that I can just copy and paste into my projects."</p>
+                        <div class="flex mt-4 text-yellow-400">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star-half-alt"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <div class="flex items-center space-x-2 mb-4">
+                        <i class="fas fa-code text-2xl text-accent"></i>
+                        <span class="text-xl font-bold">SEOTools<span class="text-accent">Pro</span></span>
+                    </div>
+                    <p class="text-gray-400">Advanced SEO tools to help you dominate search rankings and drive more organic traffic.</p>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Tools</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">Meta Tag Generator</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">Robots.txt Generator</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">Keyword Density Analyzer</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">Backlink Checker</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Resources</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">SEO Blog</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">Guides & Tutorials</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">Case Studies</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">Webmaster Tools</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Connect</h4>
+                    <div class="flex space-x-4 mb-4">
+                        <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-primary transition">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-primary transition">
+                            <i class="fab fa-linkedin-in"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-primary transition">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                    </div>
+                    <p class="text-gray-400">Subscribe to our newsletter for SEO tips and updates.</p>
+                    <div class="mt-4 flex">
+                        <input type="email" placeholder="Your email" class="px-4 py-2 rounded-l-lg bg-gray-800 text-white focus:outline-none focus:ring-1 focus:ring-primary w-full">
+                        <button class="px-4 py-2 rounded-r-lg bg-primary hover:bg-primary-dark transition">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+                <p>&copy; 2023 SEOToolsPro. All rights reserved. | <a href="#" class="hover:text-white transition">Privacy Policy</a> | <a href="#" class="hover:text-white transition">Terms of Service</a></p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM elements
+            const basicTab = document.getElementById('basic-tab');
+            const socialTab = document.getElementById('social-tab');
+            const advancedTab = document.getElementById('advanced-tab');
+            const basicSection = document.getElementById('basic-tab-content');
+            const socialSection = document.getElementById('social-tab-content');
+            const advancedSection = document.getElementById('advanced-tab-content');
+            const copyBtn = document.getElementById('copy-btn');
+            const downloadBtn = document.getElementById('download-btn');
+            const metaOutput = document.getElementById('meta-output');
+            const generateBtn = document.getElementById('generateBtn');
+            const btnText = document.getElementById('btnText');
+            const spinner = document.getElementById('spinner');
+            const resultsSection = document.getElementById('resultsSection');
+            const successMessage = document.getElementById('successMessage');
+            const themeColor = document.getElementById('theme-color');
+            const themeColorValue = document.getElementById('theme-color-value');
+
+            // Input elements
+            const pageTitle = document.getElementById('page-title');
+            const pageDescription = document.getElementById('page-description');
+            const pageKeywords = document.getElementById('page-keywords');
+            const pageAuthor = document.getElementById('page-author');
+            const ogTitle = document.getElementById('og-title');
+            const ogDescription = document.getElementById('og-description');
+            const ogUrl = document.getElementById('og-url');
+            const ogImage = document.getElementById('og-image');
+            const ogType = document.getElementById('og-type');
+            const twitterCard = document.getElementById('twitter-card');
+            const viewport = document.getElementById('viewport');
+            const charset = document.getElementById('charset');
+            const robots = document.getElementById('robots');
+
+            // Character counters
+            const descriptionCount = document.getElementById('description-count');
+            const ogDescriptionCount = document.getElementById('og-description-count');
+
+            // Tab switching
+            function switchTab(tab, section) {
+                // Reset all tabs
+                [basicTab, socialTab, advancedTab].forEach(t => t.classList.remove('active'));
+                
+                // Hide all sections
+                [basicSection, socialSection, advancedSection].forEach(s => s.classList.remove('active'));
+                
+                // Activate selected tab
+                tab.classList.add('active');
+                
+                // Show selected section
+                section.classList.add('active');
+            }
+
+            basicTab.addEventListener('click', () => switchTab(basicTab, basicSection));
+            socialTab.addEventListener('click', () => switchTab(socialTab, socialSection));
+            advancedTab.addEventListener('click', () => switchTab(advancedTab, advancedSection));
+
+            // Update theme color display
+            themeColor.addEventListener('input', function() {
+                themeColorValue.textContent = this.value;
+                updateMetaTags();
+            });
+
+            // Character count for descriptions
+            pageDescription.addEventListener('input', function() {
+                const count = this.value.length;
+                descriptionCount.textContent = `${count}/160`;
+                descriptionCount.className = 'character-count';
+                
+                if (count > 160) {
+                    descriptionCount.classList.add('error');
+                } else if (count > 150) {
+                    descriptionCount.classList.add('warning');
+                }
+                
+                updateMetaTags();
+            });
+
+            ogDescription.addEventListener('input', function() {
+                const count = this.value.length;
+                ogDescriptionCount.textContent = `${count}/160`;
+                ogDescriptionCount.className = 'character-count';
+                
+                if (count > 160) {
+                    ogDescriptionCount.classList.add('error');
+                } else if (count > 150) {
+                    ogDescriptionCount.classList.add('warning');
+                }
+                
+                updateMetaTags();
+            });
+
+            // Generate meta tags
+            function generateMetaTags() {
+                let metaTags = '';
+
+                // Basic meta tags
+                metaTags += `<!-- Primary Meta Tags -->\n`;
+                if (pageTitle.value) {
+                    metaTags += `<title>${escapeHtml(pageTitle.value)}</title>\n`;
+                }
+                if (pageDescription.value) {
+                    metaTags += `<meta name="description" content="${escapeHtml(pageDescription.value)}">\n`;
+                }
+                if (pageKeywords.value) {
+                    metaTags += `<meta name="keywords" content="${escapeHtml(pageKeywords.value)}">\n`;
+                }
+                if (pageAuthor.value) {
+                    metaTags += `<meta name="author" content="${escapeHtml(pageAuthor.value)}">\n`;
+                }
+                metaTags += `<meta name="robots" content="${escapeHtml(robots.value)}">\n\n`;
+
+                // Viewport and charset
+                metaTags += `<!-- Viewport and Charset -->\n`;
+                metaTags += `<meta name="viewport" content="${escapeHtml(viewport.value)}">\n`;
+                metaTags += `<meta charset="${escapeHtml(charset.value)}">\n\n`;
+
+                // Theme color
+                metaTags += `<!-- Theme Color -->\n`;
+                metaTags += `<meta name="theme-color" content="${themeColor.value}">\n\n`;
+
+                // OpenGraph / Social Media
+                metaTags += `<!-- OpenGraph / Social Media -->\n`;
+                if (ogTitle.value || pageTitle.value) {
+                    metaTags += `<meta property="og:title" content="${escapeHtml(ogTitle.value || pageTitle.value)}">\n`;
+                }
+                if (ogDescription.value || pageDescription.value) {
+                    metaTags += `<meta property="og:description" content="${escapeHtml(ogDescription.value || pageDescription.value)}">\n`;
+                }
+                if (ogUrl.value) {
+                    metaTags += `<meta property="og:url" content="${escapeHtml(ogUrl.value)}">\n`;
+                }
+                if (ogImage.value) {
+                    metaTags += `<meta property="og:image" content="${escapeHtml(ogImage.value)}">\n`;
+                }
+                metaTags += `<meta property="og:type" content="${escapeHtml(ogType.value)}">\n\n`;
+
+                // Twitter Card
+                metaTags += `<!-- Twitter Card -->\n`;
+                metaTags += `<meta name="twitter:card" content="${escapeHtml(twitterCard.value)}">\n`;
+                if (ogTitle.value || pageTitle.value) {
+                    metaTags += `<meta name="twitter:title" content="${escapeHtml(ogTitle.value || pageTitle.value)}">\n`;
+                }
+                if (ogDescription.value || pageDescription.value) {
+                    metaTags += `<meta name="twitter:description" content="${escapeHtml(ogDescription.value || pageDescription.value)}">\n`;
+                }
+                if (ogImage.value) {
+                    metaTags += `<meta name="twitter:image" content="${escapeHtml(ogImage.value)}">\n`;
+                }
+
+                return metaTags;
+            }
+
+            // Escape HTML for output
+            function escapeHtml(unsafe) {
+                if (!unsafe) return '';
+                return unsafe
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#039;");
+            }
+
+            // Copy to clipboard
+            copyBtn.addEventListener('click', function() {
+                const metaTags = metaOutput.textContent;
+                navigator.clipboard.writeText(metaTags).then(() => {
+                    copyBtn.innerHTML = '<i class="fas fa-check mr-2"></i> Copied!';
+                    setTimeout(() => {
+                        copyBtn.innerHTML = '<i class="fas fa-copy mr-2"></i> Copy';
+                    }, 2000);
+                });
+            });
+
+            // Download meta tags
+            downloadBtn.addEventListener('click', function() {
+                const blob = new Blob([metaOutput.textContent], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'meta-tags.html';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                downloadBtn.innerHTML = '<i class="fas fa-check mr-2"></i> Downloaded!';
+                setTimeout(() => {
+                    downloadBtn.innerHTML = '<i class="fas fa-download mr-2"></i> Download';
+                }, 2000);
+            });
+
+            // Update meta tags when any input changes
+            const allInputs = [
+                pageTitle, pageDescription, pageKeywords, pageAuthor,
+                ogTitle, ogDescription, ogUrl, ogImage, ogType, twitterCard,
+                viewport, charset, robots, themeColor
+            ];
+
+            allInputs.forEach(input => {
+                input.addEventListener('input', updateMetaTags);
+                input.addEventListener('change', updateMetaTags);
+            });
+
+            function updateMetaTags() {
+                metaOutput.textContent = generateMetaTags();
+            }
+
+            // Generate button click handler
+            generateBtn.addEventListener('click', function() {
+                // Show loading state
+                btnText.textContent = 'Generating...';
+                spinner.classList.remove('hidden');
+                generateBtn.disabled = true;
+                
+                // Show results section if hidden
+                if (resultsSection.classList.contains('hidden')) {
+                    resultsSection.classList.remove('hidden');
+                    setTimeout(() => {
+                        resultsSection.scrollIntoView({ behavior: 'smooth' });
+                    }, 100);
+                }
+                
+                // Update meta tags
+                updateMetaTags();
+                
+                // Show success message
+                setTimeout(() => {
+                    successMessage.classList.add('show');
+                    
+                    // Reset button state
+                    btnText.textContent = 'Generate Meta Tags';
+                    spinner.classList.add('hidden');
+                    generateBtn.disabled = false;
+                }, 800);
+            });
+
+            // Initialize with default meta tags
+            updateMetaTags();
+        });
+    </script>
+</body>
+</html>

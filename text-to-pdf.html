@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text to PDF Converter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        .text-editor {
+            min-height: 200px;
+            transition: all 0.3s ease;
+        }
+        .text-editor:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 1px #3b82f6;
+        }
+        .option-card {
+            transition: all 0.2s ease;
+        }
+        .option-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .loading-spinner {
+            display: inline-block;
+            width: 1.5rem;
+            height: 1.5rem;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <div class="max-w-4xl mx-auto">
+            <!-- Header -->
+            <header class="text-center mb-10">
+                <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-2">Text to PDF Converter</h1>
+                <p class="text-gray-600">Convert your text into a professional PDF document</p>
+            </header>
+
+            <!-- Main Card -->
+            <div class="bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg">
+                <div class="p-6 md:p-8">
+                    <!-- Text Input Section -->
+                    <div class="mb-8">
+                        <label for="textContent" class="block text-sm font-medium text-gray-700 mb-2">Enter your text</label>
+                        <textarea id="textContent" class="text-editor w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Type or paste your text here..."></textarea>
+                        <div class="mt-3 flex justify-between items-center">
+                            <span id="charCount" class="text-sm text-gray-500">0 characters</span>
+                            <button id="clearTextBtn" class="text-sm text-blue-600 hover:text-blue-800">Clear text</button>
+                        </div>
+                    </div>
+
+                    <!-- Options Section -->
+                    <div class="mb-8 border-t pt-6">
+                        <h3 class="text-lg font-medium text-gray-800 mb-4">PDF Options</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="pdfTitle" class="block text-sm font-medium text-gray-700 mb-1">Document Title</label>
+                                <input type="text" id="pdfTitle" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="My Document">
+                            </div>
+                            <div>
+                                <label for="fileName" class="block text-sm font-medium text-gray-700 mb-1">File Name</label>
+                                <input type="text" id="fileName" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="document.pdf">
+                            </div>
+                            <div>
+                                <label for="pageSize" class="block text-sm font-medium text-gray-700 mb-1">Page Size</label>
+                                <select id="pageSize" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="a4">A4</option>
+                                    <option value="letter">Letter</option>
+                                    <option value="a5">A5</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="pageOrientation" class="block text-sm font-medium text-gray-700 mb-1">Orientation</label>
+                                <select id="pageOrientation" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="portrait">Portrait</option>
+                                    <option value="landscape">Landscape</option>
+                                </select>
+                            </div>
+                            <div class="flex items-center">
+                                <input id="addPageNumbers" type="checkbox" checked class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                <label for="addPageNumbers" class="ml-2 block text-sm text-gray-700">Add page numbers</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input id="addTimestamp" type="checkbox" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                <label for="addTimestamp" class="ml-2 block text-sm text-gray-700">Add creation date</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Formatting Options -->
+                    <div class="mb-8 border-t pt-6">
+                        <h3 class="text-lg font-medium text-gray-800 mb-4">Text Formatting</h3>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                            <div class="option-card bg-white border border-gray-200 rounded-lg p-4 text-center cursor-pointer hover:border-blue-300">
+                                <label class="flex items-center justify-center space-x-2">
+                                    <input type="radio" name="fontFamily" value="helvetica" checked class="h-4 w-4 text-blue-600 focus:ring-blue-500">
+                                    <span class="text-sm font-medium text-gray-700">Helvetica</span>
+                                </label>
+                            </div>
+                            <div class="option-card bg-white border border-gray-200 rounded-lg p-4 text-center cursor-pointer hover:border-blue-300">
+                                <label class="flex items-center justify-center space-x-2">
+                                    <input type="radio" name="fontFamily" value="times" class="h-4 w-4 text-blue-600 focus:ring-blue-500">
+                                    <span class="text-sm font-medium text-gray-700">Times New Roman</span>
+                                </label>
+                            </div>
+                            <div class="option-card bg-white border border-gray-200 rounded-lg p-4 text-center cursor-pointer hover:border-blue-300">
+                                <label class="flex items-center justify-center space-x-2">
+                                    <input type="radio" name="fontFamily" value="courier" class="h-4 w-4 text-blue-600 focus:ring-blue-500">
+                                    <span class="text-sm font-medium text-gray-700">Courier</span>
+                                </label>
+                            </div>
+                            <div class="option-card bg-white border border-gray-200 rounded-lg p-4 text-center cursor-pointer hover:border-blue-300">
+                                <label class="flex items-center justify-center space-x-2">
+                                    <input type="radio" name="fontFamily" value="arial" class="h-4 w-4 text-blue-600 focus:ring-blue-500">
+                                    <span class="text-sm font-medium text-gray-700">Arial</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-4">
+                            <div>
+                                <label for="fontSize" class="block text-sm font-medium text-gray-700 mb-1">Font Size</label>
+                                <select id="fontSize" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="10">10pt</option>
+                                    <option value="12" selected>12pt</option>
+                                    <option value="14">14pt</option>
+                                    <option value="16">16pt</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="lineHeight" class="block text-sm font-medium text-gray-700 mb-1">Line Height</label>
+                                <select id="lineHeight" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="1.2">1.2</option>
+                                    <option value="1.5" selected>1.5</option>
+                                    <option value="1.8">1.8</option>
+                                    <option value="2">2.0</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="marginSize" class="block text-sm font-medium text-gray-700 mb-1">Margins (mm)</label>
+                                <select id="marginSize" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="10">10mm</option>
+                                    <option value="15" selected>15mm</option>
+                                    <option value="20">20mm</option>
+                                    <option value="25">25mm</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="textAlign" class="block text-sm font-medium text-gray-700 mb-1">Alignment</label>
+                                <select id="textAlign" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="left">Left</option>
+                                    <option value="center">Center</option>
+                                    <option value="right">Right</option>
+                                    <option value="justify">Justify</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex flex-wrap gap-3 justify-center">
+                        <button id="generatePdfBtn" class="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition flex items-center">
+                            Generate PDF
+                        </button>
+                        <button id="resetAllBtn" class="px-6 py-3 bg-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition">
+                            Reset All
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <footer class="mt-12 text-center text-gray-500 text-sm">
+                <p>Text to PDF Converter &copy; <span id="year"></span> - All rights reserved</p>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Status Modal -->
+    <div id="statusModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl p-6 max-w-sm w-full mx-4">
+            <div class="text-center">
+                <div id="statusIcon" class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100">
+                    <svg id="successIcon" class="h-6 w-6 text-blue-600 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <div id="loadingSpinner" class="loading-spinner"></div>
+                </div>
+                <h3 id="statusTitle" class="mt-3 text-lg font-medium text-gray-900">Processing...</h3>
+                <div class="mt-2">
+                    <p id="statusMessage" class="text-sm text-gray-500">Your PDF is being generated. Please wait.</p>
+                </div>
+                <div class="mt-4">
+                    <button id="closeModalBtn" type="button" class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Close
+                    </button>
+                    <a id="downloadBtn" href="#" download class="px-4 py-2 ml-3 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 hidden">
+                        Download PDF
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Set current year in footer
+        document.getElementById('year').textContent = new Date().getFullYear();
+
+        // Initialize jsPDF
+        const { jsPDF } = window.jspdf;
+
+        // DOM elements
+        const textContent = document.getElementById('textContent');
+        const charCount = document.getElementById('charCount');
+        const clearTextBtn = document.getElementById('clearTextBtn');
+        const generatePdfBtn = document.getElementById('generatePdfBtn');
+        const resetAllBtn = document.getElementById('resetAllBtn');
+        const statusModal = document.getElementById('statusModal');
+        const statusTitle = document.getElementById('statusTitle');
+        const statusMessage = document.getElementById('statusMessage');
+        const statusIcon = document.getElementById('statusIcon');
+        const successIcon = document.getElementById('successIcon');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+
+        // Character count update
+        textContent.addEventListener('input', function() {
+            const count = this.value.length;
+            charCount.textContent = `${count} character${count !== 1 ? 's' : ''}`;
+        });
+
+        // Clear text button
+        clearTextBtn.addEventListener('click', function() {
+            textContent.value = '';
+            charCount.textContent = '0 characters';
+        });
+
+        // Generate PDF button
+        generatePdfBtn.addEventListener('click', function() {
+            const content = textContent.value.trim();
+            if (!content) {
+                showStatusModal('Error', 'Please enter some text to convert.', 'error');
+                return;
+            }
+
+            // Show processing modal
+            showStatusModal('Processing...', 'Your PDF is being generated.', 'loading');
+
+            // Get all options
+            const pdfTitle = document.getElementById('pdfTitle').value || 'My Document';
+            const fileName = document.getElementById('fileName').value || 'document.pdf';
+            const pageSize = document.getElementById('pageSize').value;
+            const pageOrientation = document.getElementById('pageOrientation').value;
+            const addPageNumbers = document.getElementById('addPageNumbers').checked;
+            const addTimestamp = document.getElementById('addTimestamp').checked;
+            const fontSize = parseInt(document.getElementById('fontSize').value);
+            const lineHeight = parseFloat(document.getElementById('lineHeight').value);
+            const marginSize = parseInt(document.getElementById('marginSize').value);
+            const textAlign = document.getElementById('textAlign').value;
+            const fontFamily = document.querySelector('input[name="fontFamily"]:checked').value;
+
+            // Generate PDF after slight delay to allow UI to update
+            setTimeout(() => {
+                try {
+                    // Create PDF
+                    const doc = new jsPDF({
+                        orientation: pageOrientation,
+                        unit: 'mm',
+                        format: pageSize
+                    });
+
+                    // Set document properties
+                    doc.setProperties({
+                        title: pdfTitle,
+                        subject: 'Text to PDF Conversion',
+                        author: 'Text to PDF Converter',
+                        keywords: 'text, pdf, conversion',
+                        creator: 'Text to PDF Converter'
+                    });
+
+                    // Set font
+                    doc.setFont(fontFamily);
+                    doc.setFontSize(fontSize);
+
+                    // Calculate available width
+                    const pageWidth = doc.internal.pageSize.getWidth();
+                    const availableWidth = pageWidth - (marginSize * 2);
+
+                    // Split text into lines
+                    const lines = doc.splitTextToSize(content, availableWidth);
+
+                    // Add title
+                    doc.setFontSize(fontSize + 2);
+                    doc.setTextColor(40);
+                    doc.text(pdfTitle, pageWidth / 2, marginSize, { align: 'center' });
+
+                    // Add timestamp if enabled
+                    if (addTimestamp) {
+                        doc.setFontSize(fontSize - 2);
+                        doc.setTextColor(100);
+                        const timestamp = new Date().toLocaleString();
+                        doc.text(`Created: ${timestamp}`, marginSize, marginSize + 10);
+                    }
+
+                    // Reset font for content
+                    doc.setFontSize(fontSize);
+                    doc.setTextColor(0);
+
+                    // Add content
+                    let yPos = marginSize + (addTimestamp ? 15 : 10);
+                    const pageHeight = doc.internal.pageSize.getHeight();
+                    const lineHeightPx = fontSize * lineHeight;
+
+                    for (let i = 0; i < lines.length; i++) {
+                        // Check if we need a new page
+                        if (yPos > pageHeight - marginSize) {
+                            if (addPageNumbers) {
+                                addPageNumber(doc, pageWidth, pageHeight);
+                            }
+                            doc.addPage();
+                            yPos = marginSize;
+                        }
+
+                        // Add line
+                        doc.text(lines[i], marginSize, yPos, {
+                            align: textAlign,
+                            maxWidth: availableWidth
+                        });
+
+                        yPos += lineHeightPx;
+                    }
+
+                    // Add page number to last page
+                    if (addPageNumbers) {
+                        addPageNumber(doc, pageWidth, pageHeight);
+                    }
+
+                    // Generate PDF blob
+                    const pdfBlob = doc.output('blob');
+                    const pdfUrl = URL.createObjectURL(pdfBlob);
+
+                    // Update modal for success
+                    showStatusModal('Conversion Complete!', 'Your PDF has been successfully generated.', 'success');
+                    
+                    // Set download link
+                    const finalFileName = fileName.endsWith('.pdf') ? fileName : `${fileName}.pdf`;
+                    downloadBtn.href = pdfUrl;
+                    downloadBtn.download = finalFileName;
+                    downloadBtn.classList.remove('hidden');
+
+                } catch (error) {
+                    console.error('Error generating PDF:', error);
+                    showStatusModal('Conversion Failed', 'An error occurred while generating your PDF. Please try again.', 'error');
+                }
+            }, 500);
+        });
+
+        // Helper function to add page numbers
+        function addPageNumber(doc, pageWidth, pageHeight) {
+            const currentPage = doc.internal.getNumberOfPages();
+            doc.setFontSize(10);
+            doc.setTextColor(100);
+            doc.text(`Page ${currentPage}`, pageWidth / 2, pageHeight - 10, { align: 'center' });
+        }
+
+        // Reset all button
+        resetAllBtn.addEventListener('click', function() {
+            textContent.value = '';
+            charCount.textContent = '0 characters';
+            document.getElementById('pdfTitle').value = 'My Document';
+            document.getElementById('fileName').value = 'document.pdf';
+            document.getElementById('pageSize').value = 'a4';
+            document.getElementById('pageOrientation').value = 'portrait';
+            document.getElementById('addPageNumbers').checked = true;
+            document.getElementById('addTimestamp').checked = false;
+            document.getElementById('fontSize').value = '12';
+            document.getElementById('lineHeight').value = '1.5';
+            document.getElementById('marginSize').value = '15';
+            document.getElementById('textAlign').value = 'left';
+            document.querySelector('input[name="fontFamily"][value="helvetica"]').checked = true;
+        });
+
+        // Status modal functions
+        function showStatusModal(title, message, type) {
+            statusTitle.textContent = title;
+            statusMessage.textContent = message;
+            
+            if (type === 'success') {
+                loadingSpinner.classList.add('hidden');
+                successIcon.classList.remove('hidden');
+                statusIcon.classList.remove('bg-blue-100');
+                statusIcon.classList.add('bg-green-100');
+                successIcon.classList.remove('text-blue-600');
+                successIcon.classList.add('text-green-600');
+            } else if (type === 'error') {
+                loadingSpinner.classList.add('hidden');
+                statusIcon.innerHTML = `
+                    <svg class="h-6 w-6 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                `;
+                statusIcon.classList.remove('bg-blue-100');
+                statusIcon.classList.add('bg-red-100');
+            } else {
+                // Loading state
+                loadingSpinner.classList.remove('hidden');
+                successIcon.classList.add('hidden');
+                statusIcon.classList.remove('bg-green-100', 'bg-red-100');
+                statusIcon.classList.add('bg-blue-100');
+            }
+            
+            statusModal.classList.remove('hidden');
+        }
+
+        // Close modal
+        closeModalBtn.addEventListener('click', function() {
+            statusModal.classList.add('hidden');
+            downloadBtn.classList.add('hidden');
+        });
+    </script>
+</body>
+</html>

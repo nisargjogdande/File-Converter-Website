@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF to Text Converter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.12.313/pdf.min.js"></script>
+    <style>
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .spinner {
+            animation: spin 1s linear infinite;
+        }
+        .dropzone {
+            transition: all 0.3s ease;
+        }
+        .dropzone.active {
+            border-color: #4f46e5;
+            background-color: #eef2ff;
+        }
+        #text-output {
+            min-height: 200px;
+            white-space: pre-wrap;
+        }
+        .pdf-preview {
+            height: 500px;
+            border: 1px solid #e5e7eb;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <header class="text-center mb-12">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-2">PDF to Text Converter</h1>
+            <p class="text-gray-600 max-w-2xl mx-auto">Extract text content from your PDF documents</p>
+        </header>
+
+        <main class="max-w-4xl mx-auto">
+            <div class="bg-white rounded-xl shadow-md overflow-hidden p-6 mb-8">
+                <div id="upload-section">
+                    <div class="dropzone border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer mb-6"
+                        id="dropzone">
+                        <div class="flex flex-col items-center justify-center space-y-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                            </svg>
+                            <h3 class="text-lg font-medium text-gray-700">Drag & drop your PDF file here</h3>
+                            <p class="text-sm text-gray-500">or click to browse files</p>
+                            <input type="file" id="file-input" accept=".pdf,application/pdf" class="hidden">
+                            <button id="browse-btn" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
+                                Select PDF File
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-center mb-4">
+                        <div class="flex items-center">
+                            <input type="checkbox" id="preserve-layout" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                            <label for="preserve-layout" class="ml-2 block text-sm text-gray-700">Preserve layout formatting</label>
+                        </div>
+                    </div>
+                    <div class="text-center text-sm text-gray-500">
+                        <p>Supported: PDF files (max file size: 10MB)</p>
+                    </div>
+                </div>
+
+                <div id="processing-section" class="hidden">
+                    <div class="text-center mb-6">
+                        <div class="inline-flex items-center justify-center w-16 h-16 bg-indigo-100 rounded-full mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-indigo-600 spinner" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-medium text-gray-700 mb-2">Extracting Text</h3>
+                        <p class="text-gray-500">Processing your PDF document...</p>
+                        <div class="w-full bg-gray-200 rounded-full h-2.5 mt-4">
+                            <div id="progress-bar" class="bg-indigo-600 h-2.5 rounded-full" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="result-section" class="hidden">
+                    <div class="text-center mb-6">
+                        <div class="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-medium text-gray-700 mb-2">Text Extracted!</h3>
+                        <p class="text-gray-500 mb-4">The text content has been successfully extracted from your PDF.</p>
+                        <div class="flex flex-wrap justify-center gap-3">
+                            <button id="copy-text-btn" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
+                                    <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" />
+                                </svg>
+                                Copy Text
+                            </button>
+                            <button id="download-text-btn" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                </svg>
+                                Download Text
+                            </button>
+                            <button id="new-conversion-btn" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors">
+                                New Conversion
+                            </button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="border rounded-lg overflow-hidden">
+                            <div class="bg-gray-50 px-4 py-2 border-b">
+                                <h4 class="font-medium text-gray-700">PDF Preview</h4>
+                            </div>
+                            <div class="p-4 bg-gray-100">
+                                <div id="pdf-preview" class="pdf-preview w-full"></div>
+                            </div>
+                        </div>
+                        <div class="border rounded-lg overflow-hidden">
+                            <div class="bg-gray-50 px-4 py-2 border-b flex justify-between items-center">
+                                <h4 class="font-medium text-gray-700">Extracted Text</h4>
+                                <span id="page-count" class="text-sm text-gray-500">Page 1 of 1</span>
+                            </div>
+                            <div class="p-4 bg-gray-50">
+                                <textarea id="text-output" class="w-full p-4 bg-white border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 font-mono text-sm"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="error-section" class="hidden p-4 bg-red-50 rounded-lg border border-red-200 text-red-700 mt-4">
+                    <div class="flex items-start">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 mt-0.5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                        </svg>
+                        <div>
+                            <h4 class="font-medium" id="error-title">Error</h4>
+                            <p class="text-sm" id="error-message"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Initialize PDF.js
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.12.313/pdf.worker.min.js';
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM elements
+            const dropzone = document.getElementById('dropzone');
+            const fileInput = document.getElementById('file-input');
+            const browseBtn = document.getElementById('browse-btn');
+            const uploadSection = document.getElementById('upload-section');
+            const processingSection = document.getElementById('processing-section');
+            const resultSection = document.getElementById('result-section');
+            const errorSection = document.getElementById('error-section');
+            const textOutput = document.getElementById('text-output');
+            const pdfPreview = document.getElementById('pdf-preview');
+            const pageCount = document.getElementById('page-count');
+            const copyTextBtn = document.getElementById('copy-text-btn');
+            const downloadTextBtn = document.getElementById('download-text-btn');
+            const newConversionBtn = document.getElementById('new-conversion-btn');
+            const preserveLayout = document.getElementById('preserve-layout');
+            const progressBar = document.getElementById('progress-bar');
+            
+            // Variables
+            let pdfDoc = null;
+            let totalPages = 1;
+            let currentPage = 1;
+
+            // Initialize event listeners
+            function initEventListeners() {
+                // File selection
+                browseBtn.addEventListener('click', () => fileInput.click());
+                fileInput.addEventListener('change', handleFileSelect);
+                
+                // Drag and drop
+                dropzone.addEventListener('dragenter', highlight);
+                dropzone.addEventListener('dragover', highlight);
+                dropzone.addEventListener('dragleave', unhighlight);
+                dropzone.addEventListener('drop', handleDrop);
+
+                // Buttons
+                copyTextBtn.addEventListener('click', copyText);
+                downloadTextBtn.addEventListener('click', downloadText);
+                newConversionBtn.addEventListener('click', resetConverter);
+            }
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            function highlight(e) {
+                preventDefaults(e);
+                dropzone.classList.add('active');
+            }
+
+            function unhighlight(e) {
+                preventDefaults(e);
+                dropzone.classList.remove('active');
+            }
+
+            function handleDrop(e) {
+                preventDefaults(e);
+                unhighlight(e);
+                
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                
+                if (files.length) {
+                    handleFileSelect({ target: { files } });
+                }
+            }
+
+            function handleFileSelect(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                hideError();
+                
+                // Validate file
+                if (!file.type.match('application/pdf') && !file.name.match(/\.pdf$/i)) {
+                    showError('Invalid File', 'Please upload a PDF file.');
+                    return;
+                }
+                
+                if (file.size > 10 * 1024 * 1024) {
+                    showError('File Too Large', 'Please upload a PDF file smaller than 10MB.');
+                    return;
+                }
+
+                uploadSection.classList.add('hidden');
+                processingSection.classList.remove('hidden');
+                updateProgress(10);
+
+                // Read the file
+                const reader = new FileReader();
+                reader.onload = function() {
+                    const typedarray = new Uint8Array(reader.result);
+                    
+                    // Load the PDF
+                    pdfjsLib.getDocument(typedarray).promise
+                        .then(function(pdf) {
+                            pdfDoc = pdf;
+                            totalPages = pdf.numPages;
+                            currentPage = 1;
+                            updateProgress(30);
+                            
+                            // Render first page preview
+                            renderPage(currentPage);
+                            
+                            // Extract text from all pages
+                            extractTextFromPDF();
+                        })
+                        .catch(function(error) {
+                            showError('PDF Error', 'Failed to load PDF: ' + error.message);
+                            resetConverter();
+                        });
+                };
+                
+                reader.onerror = function() {
+                    showError('File Error', 'Error reading the file. Please try again.');
+                    resetConverter();
+                };
+                
+                reader.readAsArrayBuffer(file);
+            }
+
+            function renderPage(pageNum) {
+                pdfDoc.getPage(pageNum).then(function(page) {
+                    const viewport = page.getViewport({ scale: 1.0 });
+                    const canvas = document.createElement('canvas');
+                    const context = canvas.getContext('2d');
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
+                    
+                    // Clear previous preview
+                    pdfPreview.innerHTML = '';
+                    pdfPreview.appendChild(canvas);
+                    
+                    // Render PDF page
+                    page.render({
+                        canvasContext: context,
+                        viewport: viewport
+                    });
+                    
+                    // Update page counter
+                    pageCount.textContent = `Page ${pageNum} of ${totalPages}`;
+                });
+            }
+
+            function extractTextFromPDF() {
+                let fullText = '';
+                let pagesProcessed = 0;
+                
+                // Process each page sequentially
+                function processPage(pageNum) {
+                    if (pageNum > totalPages) {
+                        // All pages processed
+                        textOutput.value = fullText;
+                        updateProgress(100);
+                        processingSection.classList.add('hidden');
+                        resultSection.classList.remove('hidden');
+                        return;
+                    }
+                    
+                    pdfDoc.getPage(pageNum).then(function(page) {
+                        updateProgress(30 + (60 * pageNum / totalPages));
+                        
+                        page.getTextContent().then(function(textContent) {
+                            let pageText = '';
+                            
+                            if (preserveLayout.checked) {
+                                // Preserve layout with spaces and newlines
+                                let lastY = 0;
+                                textContent.items.forEach(function(item) {
+                                    // Add newline if Y position changes significantly
+                                    if (Math.abs(item.transform[5] - lastY) > 5) {
+                                        pageText += '\n';
+                                    }
+                                    pageText += item.str + ' ';
+                                    lastY = item.transform[5];
+                                });
+                            } else {
+                                // Simple concatenation
+                                pageText = textContent.items.map(item => item.str).join(' ');
+                            }
+                            
+                            fullText += `\n\n--- Page ${pageNum} ---\n${pageText.trim()}\n`;
+                            pagesProcessed++;
+                            
+                            // Process next page
+                            processPage(pageNum + 1);
+                        });
+                    });
+                }
+                
+                // Start processing from first page
+                processPage(1);
+            }
+
+            function copyText() {
+                textOutput.select();
+                document.execCommand('copy');
+                
+                // Show feedback
+                const originalText = copyTextBtn.innerHTML;
+                copyTextBtn.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                    </svg>
+                    Copied!
+                `;
+                
+                setTimeout(() => {
+                    copyTextBtn.innerHTML = originalText;
+                }, 2000);
+            }
+
+            function downloadText() {
+                const blob = new Blob([textOutput.value], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'extracted_text.txt';
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }, 100);
+            }
+
+            function updateProgress(percent) {
+                progressBar.style.width = `${percent}%`;
+            }
+
+            function resetConverter() {
+                uploadSection.classList.remove('hidden');
+                processingSection.classList.add('hidden');
+                resultSection.classList.add('hidden');
+                fileInput.value = '';
+                pdfDoc = null;
+                textOutput.value = '';
+                hideError();
+            }
+
+            function showError(title, message) {
+                document.getElementById('error-title').textContent = title;
+                document.getElementById('error-message').textContent = message;
+                errorSection.classList.remove('hidden');
+                errorSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+
+            function hideError() {
+                errorSection.classList.add('hidden');
+            }
+
+            // Initialize the app
+            initEventListeners();
+        });
+    </script>
+</body>
+</html>

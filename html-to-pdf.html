@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML to PDF Converter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        .editor-container {
+            min-height: 300px;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.375rem;
+        }
+        .editor-toolbar {
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .editor-content {
+            min-height: 250px;
+            padding: 1rem;
+            outline: none;
+        }
+        .loading-spinner {
+            display: inline-block;
+            width: 1.5rem;
+            height: 1.5rem;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .option-card {
+            transition: all 0.2s ease;
+        }
+        .option-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <div class="max-w-6xl mx-auto">
+            <!-- Header -->
+            <header class="text-center mb-10">
+                <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-2">HTML to PDF Converter</h1>
+                <p class="text-gray-600">Convert HTML content to professional PDF documents</p>
+            </header>
+
+            <!-- Main Card -->
+            <div class="bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg">
+                <div class="p-6 md:p-8">
+                    <!-- Editor Section -->
+                    <div class="mb-8">
+                        <label for="htmlContent" class="block text-sm font-medium text-gray-700 mb-2">HTML Content</label>
+                        <div class="editor-container bg-white">
+                            <div class="editor-toolbar bg-gray-50 p-2 flex flex-wrap gap-1">
+                                <button type="button" data-command="bold" class="p-2 rounded hover:bg-gray-200" title="Bold">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6h16M7 12h10m-8 6h6" />
+                                    </svg>
+                                </button>
+                                <button type="button" data-command="italic" class="p-2 rounded hover:bg-gray-200" title="Italic">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h10m-5 4h2" />
+                                    </svg>
+                                </button>
+                                <button type="button" data-command="underline" class="p-2 rounded hover:bg-gray-200" title="Underline">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19h14M5 5h14v6a6 6 0 01-12 0V5z" />
+                                    </svg>
+                                </button>
+                                <div class="border-l border-gray-300 h-6 mx-2"></div>
+                                <button type="button" data-command="insertUnorderedList" class="p-2 rounded hover:bg-gray-200" title="Bullet List">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                                    </svg>
+                                </button>
+                                <button type="button" data-command="insertOrderedList" class="p-2 rounded hover:bg-gray-200" title="Numbered List">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12l4-4m-4 4l4 4" />
+                                    </svg>
+                                </button>
+                                <div class="border-l border-gray-300 h-6 mx-2"></div>
+                                <button type="button" data-command="createLink" class="p-2 rounded hover:bg-gray-200" title="Link">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                                    </svg>
+                                </button>
+                                <button type="button" data-command="insertImage" class="p-2 rounded hover:bg-gray-200" title="Image">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                </button>
+                            </div>
+                            <div id="htmlContent" class="editor-content" contenteditable="true">
+                                <h1 class="text-2xl font-bold mb-4">Welcome to HTML to PDF Converter</h1>
+                                <p class="mb-4">Edit this content or paste your own HTML here. You can use the toolbar above to format your text.</p>
+                                <ul class="list-disc pl-5 mb-4">
+                                    <li>Supports rich text formatting</li>
+                                    <li>Preserves images and links</li>
+                                    <li>Customizable PDF options</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Options Section -->
+                    <div class="mb-8 border-t pt-6">
+                        <h3 class="text-lg font-medium text-gray-800 mb-4">PDF Options</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div>
+                                <label for="pdfTitle" class="block text-sm font-medium text-gray-700 mb-1">Document Title</label>
+                                <input type="text" id="pdfTitle" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="My Document">
+                            </div>
+                            <div>
+                                <label for="pageSize" class="block text-sm font-medium text-gray-700 mb-1">Page Size</label>
+                                <select id="pageSize" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="a4">A4</option>
+                                    <option value="letter">Letter</option>
+                                    <option value="a5">A5</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="pageOrientation" class="block text-sm font-medium text-gray-700 mb-1">Orientation</label>
+                                <select id="pageOrientation" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="portrait">Portrait</option>
+                                    <option value="landscape">Landscape</option>
+                                </select>
+                            </div>
+                            <div class="flex items-center">
+                                <input id="addPageNumbers" type="checkbox" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                <label for="addPageNumbers" class="ml-2 block text-sm text-gray-700">Add page numbers</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input id="addTimestamp" type="checkbox" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                <label for="addTimestamp" class="ml-2 block text-sm text-gray-700">Add creation date</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input id="preserveStyles" type="checkbox" checked class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                <label for="preserveStyles" class="ml-2 block text-sm text-gray-700">Preserve styles</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex flex-wrap gap-3 justify-center">
+                        <button id="generatePdfBtn" class="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition flex items-center">
+                            Generate PDF
+                        </button>
+                        <button id="clearContentBtn" class="px-6 py-3 bg-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition">
+                            Clear Content
+                        </button>
+                        <button id="sampleContentBtn" class="px-6 py-3 bg-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition">
+                            Load Sample
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <footer class="mt-12 text-center text-gray-500 text-sm">
+                <p>HTML to PDF Converter &copy; <span id="year"></span> - All rights reserved</p>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Status Modal -->
+    <div id="statusModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl p-6 max-w-sm w-full mx-4">
+            <div class="text-center">
+                <div id="statusIcon" class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100">
+                    <svg id="successIcon" class="h-6 w-6 text-blue-600 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <div id="loadingSpinner" class="loading-spinner"></div>
+                </div>
+                <h3 id="statusTitle" class="mt-3 text-lg font-medium text-gray-900">Processing...</h3>
+                <div class="mt-2">
+                    <p id="statusMessage" class="text-sm text-gray-500">Your PDF is being generated. Please wait.</p>
+                </div>
+                <div class="mt-4">
+                    <button id="closeModalBtn" type="button" class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Close
+                    </button>
+                    <a id="downloadBtn" href="#" download class="px-4 py-2 ml-3 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 hidden">
+                        Download PDF
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Set current year in footer
+        document.getElementById('year').textContent = new Date().getFullYear();
+
+        // Initialize jsPDF
+        const { jsPDF } = window.jspdf;
+
+        // DOM elements
+        const htmlContent = document.getElementById('htmlContent');
+        const generatePdfBtn = document.getElementById('generatePdfBtn');
+        const clearContentBtn = document.getElementById('clearContentBtn');
+        const sampleContentBtn = document.getElementById('sampleContentBtn');
+        const statusModal = document.getElementById('statusModal');
+        const statusTitle = document.getElementById('statusTitle');
+        const statusMessage = document.getElementById('statusMessage');
+        const statusIcon = document.getElementById('statusIcon');
+        const successIcon = document.getElementById('successIcon');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+
+        // Editor toolbar buttons
+        document.querySelectorAll('[data-command]').forEach(button => {
+            button.addEventListener('click', function() {
+                const command = this.getAttribute('data-command');
+                if (command === 'createLink') {
+                    const url = prompt('Enter the URL:');
+                    if (url) document.execCommand(command, false, url);
+                } else if (command === 'insertImage') {
+                    const url = prompt('Enter the image URL:');
+                    if (url) document.execCommand(command, false, url);
+                } else {
+                    document.execCommand(command, false, null);
+                }
+                htmlContent.focus();
+            });
+        });
+
+        // Generate PDF
+        generatePdfBtn.addEventListener('click', function() {
+            // Show processing modal
+            showStatusModal('Processing...', 'Converting HTML to PDF. This may take a moment.', 'loading');
+
+            // Get options
+            const pdfTitle = document.getElementById('pdfTitle').value || 'HTML Document';
+            const pageSize = document.getElementById('pageSize').value;
+            const pageOrientation = document.getElementById('pageOrientation').value;
+            const addPageNumbers = document.getElementById('addPageNumbers').checked;
+            const addTimestamp = document.getElementById('addTimestamp').checked;
+            const preserveStyles = document.getElementById('preserveStyles').checked;
+
+            // Create a clone of the content to avoid affecting the visible editor
+            const contentClone = htmlContent.cloneNode(true);
+            contentClone.style.padding = '20px';
+            contentClone.style.width = '100%';
+            contentClone.style.boxSizing = 'border-box';
+            contentClone.style.backgroundColor = 'white';
+            document.body.appendChild(contentClone);
+
+            // Use html2canvas to render the HTML
+            html2canvas(contentClone, {
+                scale: 2,
+                logging: false,
+                useCORS: true,
+                allowTaint: true,
+                scrollX: 0,
+                scrollY: 0,
+                windowWidth: contentClone.scrollWidth,
+                windowHeight: contentClone.scrollHeight
+            }).then(canvas => {
+                // Remove the clone
+                document.body.removeChild(contentClone);
+
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jsPDF({
+                    orientation: pageOrientation,
+                    unit: 'mm',
+                    format: pageSize
+                });
+
+                // Set document properties
+                pdf.setProperties({
+                    title: pdfTitle,
+                    subject: 'HTML to PDF Conversion',
+                    author: 'HTML to PDF Converter',
+                    keywords: 'html, pdf, conversion',
+                    creator: 'HTML to PDF Converter'
+                });
+
+                // Calculate dimensions
+                const imgWidth = pdf.internal.pageSize.getWidth() - 20; // 10mm margins
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+                // Add title and metadata
+                pdf.setFontSize(16);
+                pdf.setTextColor(40);
+                pdf.text(pdfTitle, pdf.internal.pageSize.getWidth() / 2, 15, { align: 'center' });
+
+                if (addTimestamp) {
+                    pdf.setFontSize(10);
+                    pdf.setTextColor(100);
+                    const timestamp = new Date().toLocaleString();
+                    pdf.text(`Created: ${timestamp}`, 10, 25);
+                }
+
+                // Add the HTML content as image
+                pdf.addImage(imgData, 'PNG', 10, addTimestamp ? 30 : 20, imgWidth, imgHeight);
+
+                // Add page numbers if enabled
+                if (addPageNumbers) {
+                    const pageCount = pdf.internal.getNumberOfPages();
+                    for (let i = 1; i <= pageCount; i++) {
+                        pdf.setPage(i);
+                        pdf.setFontSize(10);
+                        pdf.setTextColor(100);
+                        pdf.text(`Page ${i} of ${pageCount}`, pdf.internal.pageSize.getWidth() / 2, pdf.internal.pageSize.getHeight() - 10, { align: 'center' });
+                    }
+                }
+
+                // Generate PDF blob
+                const pdfBlob = pdf.output('blob');
+                const pdfUrl = URL.createObjectURL(pdfBlob);
+
+                // Update modal for success
+                showStatusModal('Conversion Complete!', 'Your HTML has been converted to PDF.', 'success');
+                
+                // Set download link
+                const fileName = pdfTitle.toLowerCase().replace(/\s+/g, '-') + '.pdf';
+                downloadBtn.href = pdfUrl;
+                downloadBtn.download = fileName;
+                downloadBtn.classList.remove('hidden');
+
+            }).catch(error => {
+                console.error('Error generating PDF:', error);
+                showStatusModal('Conversion Failed', 'An error occurred while converting your HTML.', 'error');
+                document.body.removeChild(contentClone);
+            });
+        });
+
+        // Clear content
+        clearContentBtn.addEventListener('click', function() {
+            htmlContent.innerHTML = '';
+            htmlContent.focus();
+        });
+
+        // Load sample content
+        sampleContentBtn.addEventListener('click', function() {
+            htmlContent.innerHTML = `
+                <h1 class="text-2xl font-bold mb-4">Sample HTML Content</h1>
+                <p class="mb-4">This is a sample document demonstrating the HTML to PDF conversion capabilities.</p>
+                
+                <h2 class="text-xl font-semibold mb-3">Features</h2>
+                <ul class="list-disc pl-5 mb-4">
+                    <li>Supports <strong>rich text</strong> formatting</li>
+                    <li>Preserves <em>images</em> and <a href="#" class="text-blue-600 hover:underline">links</a></li>
+                    <li>Customizable PDF options</li>
+                </ul>
+                
+                <h2 class="text-xl font-semibold mb-3">How to Use</h2>
+                <ol class="list-decimal pl-5 mb-4">
+                    <li>Edit this content or paste your own HTML</li>
+                    <li>Use the toolbar to format your text</li>
+                    <li>Configure PDF options</li>
+                    <li>Click "Generate PDF"</li>
+                </ol>
+                
+                <div class="bg-gray-100 p-4 rounded-lg mb-4">
+                    <p class="font-medium">Note:</p>
+                    <p>Complex layouts may require additional styling for optimal PDF rendering.</p>
+                </div>
+            `;
+            htmlContent.focus();
+        });
+
+        // Status modal functions
+        function showStatusModal(title, message, type) {
+            statusTitle.textContent = title;
+            statusMessage.textContent = message;
+            
+            if (type === 'success') {
+                loadingSpinner.classList.add('hidden');
+                successIcon.classList.remove('hidden');
+                statusIcon.classList.remove('bg-blue-100');
+                statusIcon.classList.add('bg-green-100');
+                successIcon.classList.remove('text-blue-600');
+                successIcon.classList.add('text-green-600');
+            } else if (type === 'error') {
+                loadingSpinner.classList.add('hidden');
+                statusIcon.innerHTML = `
+                    <svg class="h-6 w-6 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                `;
+                statusIcon.classList.remove('bg-blue-100');
+                statusIcon.classList.add('bg-red-100');
+            } else {
+                // Loading state
+                loadingSpinner.classList.remove('hidden');
+                successIcon.classList.add('hidden');
+                statusIcon.classList.remove('bg-green-100', 'bg-red-100');
+                statusIcon.classList.add('bg-blue-100');
+            }
+            
+            statusModal.classList.remove('hidden');
+        }
+
+        // Close modal
+        closeModalBtn.addEventListener('click', function() {
+            statusModal.classList.add('hidden');
+            downloadBtn.classList.add('hidden');
+        });
+    </script>
+</body>
+</html>

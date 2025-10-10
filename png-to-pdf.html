@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PNG to PDF Converter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .spinner {
+            animation: spin 1s linear infinite;
+        }
+        .dropzone {
+            transition: all 0.3s ease;
+        }
+        .dropzone.active {
+            border-color: #4f46e5;
+            background-color: #eef2ff;
+        }
+        .image-preview {
+            max-height: 300px;
+            object-fit: contain;
+        }
+        #pdf-preview {
+            width: 100%;
+            height: 500px;
+            border: 1px solid #e5e7eb;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <header class="text-center mb-12">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-2">PNG to PDF Converter</h1>
+            <p class="text-gray-600 max-w-2xl mx-auto">Convert PNG images to high-quality PDF documents</p>
+        </header>
+
+        <main class="max-w-4xl mx-auto">
+            <div class="bg-white rounded-xl shadow-md overflow-hidden p-6 mb-8">
+                <div id="upload-section">
+                    <div class="dropzone border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer mb-6"
+                        id="dropzone">
+                        <div class="flex flex-col items-center justify-center space-y-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                            </svg>
+                            <h3 class="text-lg font-medium text-gray-700">Drag & drop your PNG files here</h3>
+                            <p class="text-sm text-gray-500">or click to browse files</p>
+                            <input type="file" id="file-input" accept="image/png" multiple class="hidden">
+                            <button id="browse-btn" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
+                                Select PNG Files
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap items-center justify-center gap-4 mb-4">
+                        <div class="flex items-center">
+                            <label for="pdf-orientation" class="block text-sm text-gray-700 mr-2">Orientation:</label>
+                            <select id="pdf-orientation" class="h-8 text-sm border-gray-300 rounded focus:ring-indigo-500 focus:border-indigo-500">
+                                <option value="portrait">Portrait</option>
+                                <option value="landscape">Landscape</option>
+                            </select>
+                        </div>
+                        <div class="flex items-center">
+                            <label for="pdf-margin" class="block text-sm text-gray-700 mr-2">Margin:</label>
+                            <select id="pdf-margin" class="h-8 text-sm border-gray-300 rounded focus:ring-indigo-500 focus:border-indigo-500">
+                                <option value="10">Small</option>
+                                <option value="20" selected>Medium</option>
+                                <option value="30">Large</option>
+                                <option value="0">None</option>
+                            </select>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="fit-to-page" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" checked>
+                            <label for="fit-to-page" class="ml-2 block text-sm text-gray-700">Fit to page</label>
+                        </div>
+                    </div>
+                    <div class="text-center text-sm text-gray-500">
+                        <p>Supported: PNG files (max file size: 5MB each)</p>
+                    </div>
+                </div>
+
+                <div id="preview-section" class="hidden mb-6">
+                    <div class="border rounded-lg overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-2 border-b flex justify-between items-center">
+                            <h4 class="font-medium text-gray-700">Image Preview</h4>
+                            <div class="flex items-center space-x-2">
+                                <span id="image-count" class="text-sm text-gray-500">0 images selected</span>
+                                <button id="clear-images-btn" class="px-2 py-1 text-xs bg-red-100 text-red-800 rounded hover:bg-red-200 transition-colors">
+                                    Clear All
+                                </button>
+                            </div>
+                        </div>
+                        <div id="image-preview-container" class="p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                            <!-- Images will be added here dynamically -->
+                        </div>
+                    </div>
+                    <div class="mt-4 flex justify-center">
+                        <button id="convert-btn" class="px-6 py-3 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
+                            Convert to PDF
+                        </button>
+                    </div>
+                </div>
+
+                <div id="processing-section" class="hidden">
+                    <div class="text-center mb-6">
+                        <div class="inline-flex items-center justify-center w-16 h-16 bg-indigo-100 rounded-full mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-indigo-600 spinner" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-medium text-gray-700 mb-2">Creating PDF</h3>
+                        <p class="text-gray-500">Processing your images and generating PDF document...</p>
+                        <div class="w-full bg-gray-200 rounded-full h-2.5 mt-4">
+                            <div id="progress-bar" class="bg-indigo-600 h-2.5 rounded-full" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="result-section" class="hidden">
+                    <div class="text-center mb-6">
+                        <div class="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-medium text-gray-700 mb-2">PDF Ready!</h3>
+                        <p class="text-gray-500 mb-4">Your PDF document has been successfully created.</p>
+                        <div class="flex flex-wrap justify-center gap-3">
+                            <button id="download-pdf-btn" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                </svg>
+                                Download PDF
+                            </button>
+                            <button id="view-pdf-btn" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                                    <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+                                </svg>
+                                View PDF
+                            </button>
+                            <button id="new-conversion-btn" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors">
+                                New Conversion
+                            </button>
+                        </div>
+                    </div>
+                    <div class="border rounded-lg overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-2 border-b">
+                            <h4 class="font-medium text-gray-700">PDF Preview</h4>
+                        </div>
+                        <div class="p-4 bg-gray-100">
+                            <iframe id="pdf-preview" class="w-full"></iframe>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="error-section" class="hidden p-4 bg-red-50 rounded-lg border border-red-200 text-red-700 mt-4">
+                    <div class="flex items-start">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 mt-0.5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                        </svg>
+                        <div>
+                            <h4 class="font-medium" id="error-title">Error</h4>
+                            <p class="text-sm" id="error-message"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Initialize jsPDF
+        const { jsPDF } = window.jspdf;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM elements
+            const dropzone = document.getElementById('dropzone');
+            const fileInput = document.getElementById('file-input');
+            const browseBtn = document.getElementById('browse-btn');
+            const uploadSection = document.getElementById('upload-section');
+            const previewSection = document.getElementById('preview-section');
+            const processingSection = document.getElementById('processing-section');
+            const resultSection = document.getElementById('result-section');
+            const errorSection = document.getElementById('error-section');
+            const imagePreviewContainer = document.getElementById('image-preview-container');
+            const imageCount = document.getElementById('image-count');
+            const clearImagesBtn = document.getElementById('clear-images-btn');
+            const convertBtn = document.getElementById('convert-btn');
+            const downloadPdfBtn = document.getElementById('download-pdf-btn');
+            const viewPdfBtn = document.getElementById('view-pdf-btn');
+            const newConversionBtn = document.getElementById('new-conversion-btn');
+            const pdfPreview = document.getElementById('pdf-preview');
+            const progressBar = document.getElementById('progress-bar');
+            
+            // Variables
+            let imageFiles = [];
+            let pdfBlob = null;
+            let pdfUrl = null;
+
+            // Initialize event listeners
+            function initEventListeners() {
+                // File selection
+                browseBtn.addEventListener('click', () => fileInput.click());
+                fileInput.addEventListener('change', handleFileSelect);
+                
+                // Drag and drop
+                dropzone.addEventListener('dragenter', highlight);
+                dropzone.addEventListener('dragover', highlight);
+                dropzone.addEventListener('dragleave', unhighlight);
+                dropzone.addEventListener('drop', handleDrop);
+
+                // Buttons
+                clearImagesBtn.addEventListener('click', clearImages);
+                convertBtn.addEventListener('click', convertToPdf);
+                downloadPdfBtn.addEventListener('click', downloadPdf);
+                viewPdfBtn.addEventListener('click', viewPdf);
+                newConversionBtn.addEventListener('click', resetConverter);
+            }
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            function highlight(e) {
+                preventDefaults(e);
+                dropzone.classList.add('active');
+            }
+
+            function unhighlight(e) {
+                preventDefaults(e);
+                dropzone.classList.remove('active');
+            }
+
+            function handleDrop(e) {
+                preventDefaults(e);
+                unhighlight(e);
+                
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                
+                if (files.length) {
+                    handleFiles(files);
+                }
+            }
+
+            function handleFileSelect(e) {
+                const files = e.target.files;
+                if (files.length) {
+                    handleFiles(files);
+                }
+            }
+
+            function handleFiles(files) {
+                hideError();
+                const validFiles = Array.from(files).filter(file => {
+                    if (!file.type.match('image/png')) {
+                        showError('Invalid File', `${file.name} is not a PNG image.`);
+                        return false;
+                    }
+                    if (file.size > 5 * 1024 * 1024) {
+                        showError('File Too Large', `${file.name} exceeds 5MB size limit.`);
+                        return false;
+                    }
+                    return true;
+                });
+
+                if (validFiles.length === 0) return;
+
+                imageFiles = [...imageFiles, ...validFiles];
+                updatePreview();
+                uploadSection.classList.add('hidden');
+                previewSection.classList.remove('hidden');
+            }
+
+            function updatePreview() {
+                imagePreviewContainer.innerHTML = '';
+                imageCount.textContent = `${imageFiles.length} ${imageFiles.length === 1 ? 'image' : 'images'} selected`;
+                
+                imageFiles.forEach((file, index) => {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const imgContainer = document.createElement('div');
+                        imgContainer.className = 'relative group';
+                        
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.className = 'image-preview w-full h-auto rounded border border-gray-200';
+                        img.alt = `Preview ${index + 1}`;
+                        
+                        const removeBtn = document.createElement('button');
+                        removeBtn.className = 'absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity';
+                        removeBtn.innerHTML = `
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                        `;
+                        removeBtn.addEventListener('click', () => removeImage(index));
+                        
+                        imgContainer.appendChild(img);
+                        imgContainer.appendChild(removeBtn);
+                        imagePreviewContainer.appendChild(imgContainer);
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            function removeImage(index) {
+                imageFiles.splice(index, 1);
+                if (imageFiles.length === 0) {
+                    resetConverter();
+                } else {
+                    updatePreview();
+                }
+            }
+
+            function clearImages() {
+                imageFiles = [];
+                resetConverter();
+            }
+
+            function convertToPdf() {
+                if (imageFiles.length === 0) {
+                    showError('No Images', 'Please add at least one PNG image to convert.');
+                    return;
+                }
+
+                processingSection.classList.remove('hidden');
+                previewSection.classList.add('hidden');
+                updateProgress(10);
+
+                // Process images sequentially
+                processImagesSequentially()
+                    .then(blob => {
+                        pdfBlob = blob;
+                        pdfUrl = URL.createObjectURL(pdfBlob);
+                        pdfPreview.src = pdfUrl;
+                        processingSection.classList.add('hidden');
+                        resultSection.classList.remove('hidden');
+                        updateProgress(100);
+                    })
+                    .catch(error => {
+                        showError('Conversion Failed', error.message);
+                        processingSection.classList.add('hidden');
+                        previewSection.classList.remove('hidden');
+                    });
+            }
+
+            function processImagesSequentially() {
+                return new Promise((resolve, reject) => {
+                    const orientation = document.getElementById('pdf-orientation').value;
+                    const margin = parseInt(document.getElementById('pdf-margin').value);
+                    const fitToPage = document.getElementById('fit-to-page').checked;
+                    
+                    const doc = new jsPDF({
+                        orientation: orientation,
+                        unit: 'mm'
+                    });
+
+                    // Add metadata
+                    doc.setProperties({
+                        title: 'PNG to PDF Conversion',
+                        subject: 'Converted from PNG images',
+                        author: 'PNG to PDF Converter',
+                        keywords: 'png, pdf, converter',
+                        creator: 'PNG to PDF Converter'
+                    });
+
+                    let processedCount = 0;
+                    
+                    function processNextImage() {
+                        if (processedCount >= imageFiles.length) {
+                            const pdfBlob = doc.output('blob');
+                            resolve(pdfBlob);
+                            return;
+                        }
+
+                        const file = imageFiles[processedCount];
+                        const reader = new FileReader();
+                        
+                        reader.onload = function(e) {
+                            try {
+                                const imgData = e.target.result;
+                                
+                                if (processedCount > 0) {
+                                    doc.addPage();
+                                }
+
+                                const pageWidth = doc.internal.pageSize.getWidth();
+                                const pageHeight = doc.internal.pageSize.getHeight();
+                                
+                                // Create an image element to get dimensions
+                                const img = new Image();
+                                img.onload = function() {
+                                    let width = img.width;
+                                    let height = img.height;
+                                    
+                                    // Convert pixels to mm (assuming 96dpi)
+                                    const pxToMm = 25.4 / 96;
+                                    width *= pxToMm;
+                                    height *= pxToMm;
+                                    
+                                    if (fitToPage) {
+                                        const ratio = Math.min(
+                                            (pageWidth - margin * 2) / width,
+                                            (pageHeight - margin * 2) / height
+                                        );
+                                        width = width * ratio;
+                                        height = height * ratio;
+                                    }
+                                    
+                                    const x = (pageWidth - width) / 2;
+                                    const y = (pageHeight - height) / 2;
+                                    
+                                    doc.addImage(imgData, 'PNG', x, y, width, height);
+                                    
+                                    processedCount++;
+                                    updateProgress(10 + (80 * processedCount / imageFiles.length));
+                                    processNextImage();
+                                };
+                                img.onerror = function() {
+                                    reject(new Error('Failed to load image'));
+                                };
+                                img.src = imgData;
+                            } catch (error) {
+                                reject(error);
+                            }
+                        };
+                        
+                        reader.onerror = function() {
+                            reject(new Error('Error reading image file'));
+                        };
+                        
+                        reader.readAsDataURL(file);
+                    }
+                    
+                    processNextImage();
+                });
+            }
+
+            function updateProgress(percent) {
+                progressBar.style.width = `${percent}%`;
+            }
+
+            function downloadPdf() {
+                if (!pdfBlob) {
+                    showError('Download Error', 'No PDF available to download');
+                    return;
+                }
+                
+                try {
+                    // Create a new blob URL in case the previous one was revoked
+                    const url = URL.createObjectURL(pdfBlob);
+                    
+                    // Create a temporary anchor element
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = `converted_images_${new Date().toISOString().slice(0, 10)}.pdf`;
+                    
+                    // Append to body, click and remove
+                    document.body.appendChild(a);
+                    a.click();
+                    
+                    // Cleanup
+                    setTimeout(() => {
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                    }, 100);
+                } catch (error) {
+                    showError('Download Failed', 'Could not download the PDF file');
+                    console.error('Download error:', error);
+                }
+            }
+
+            function viewPdf() {
+                if (!pdfUrl) {
+                    showError('View Error', 'No PDF available to view');
+                    return;
+                }
+                window.open(pdfUrl, '_blank');
+            }
+
+            function resetConverter() {
+                uploadSection.classList.remove('hidden');
+                previewSection.classList.add('hidden');
+                processingSection.classList.add('hidden');
+                resultSection.classList.add('hidden');
+                fileInput.value = '';
+                imageFiles = [];
+                if (pdfUrl) {
+                    URL.revokeObjectURL(pdfUrl);
+                    pdfUrl = null;
+                }
+                pdfBlob = null;
+                hideError();
+            }
+
+            function showError(title, message) {
+                document.getElementById('error-title').textContent = title;
+                document.getElementById('error-message').textContent = message;
+                errorSection.classList.remove('hidden');
+                errorSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+
+            function hideError() {
+                errorSection.classList.add('hidden');
+            }
+
+            // Initialize the app
+            initEventListeners();
+        });
+    </script>
+</body>
+</html>

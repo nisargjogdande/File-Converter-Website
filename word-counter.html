@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Counter | Analyze Your Text</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        textarea {
+            resize: none;
+            scrollbar-width: thin;
+            scrollbar-color: #3b82f6 #f1f5f9;
+        }
+        textarea::-webkit-scrollbar {
+            width: 8px;
+        }
+        textarea::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 10px;
+        }
+        textarea::-webkit-scrollbar-thumb {
+            background-color: #3b82f6;
+            border-radius: 10px;
+        }
+        .stat-card {
+            transition: all 0.3s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-3xl animate-fade-in">
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-blue-600 to-blue-500 p-6 text-white">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center">
+                    <div>
+                        <h1 class="text-2xl font-bold">Word Counter</h1>
+                        <p class="text-blue-100 mt-1">Analyze your text in real-time</p>
+                    </div>
+                    <div class="mt-4 md:mt-0 flex items-center space-x-2">
+                        <button id="clear-btn" class="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition text-sm font-medium flex items-center">
+                            <i class="fas fa-eraser mr-2"></i>
+                            Clear Text
+                        </button>
+                        <button id="sample-btn" class="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition text-sm font-medium flex items-center">
+                            <i class="fas fa-lightbulb mr-2"></i>
+                            Sample Text
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Main Content -->
+            <div class="p-6">
+                <!-- Text Input -->
+                <div class="mb-6">
+                    <div class="flex justify-between items-center mb-2">
+                        <label for="text-input" class="block text-sm font-medium text-gray-700">Enter your text below</label>
+                        <span id="last-updated" class="text-xs text-gray-500">Just now</span>
+                    </div>
+                    <textarea id="text-input" rows="8" 
+                        class="block w-full p-4 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition font-sans"
+                        placeholder="Type or paste your text here..."></textarea>
+                </div>
+                
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <!-- Words Card -->
+                    <div class="stat-card bg-blue-50 p-4 rounded-lg border border-blue-100">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-blue-800">Words</p>
+                                <p id="word-count" class="text-2xl font-bold text-blue-600">0</p>
+                            </div>
+                            <div class="bg-blue-100 p-2 rounded-full">
+                                <i class="fas fa-font text-blue-600"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Characters Card -->
+                    <div class="stat-card bg-green-50 p-4 rounded-lg border border-green-100">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-green-800">Characters</p>
+                                <p id="char-count" class="text-2xl font-bold text-green-600">0</p>
+                            </div>
+                            <div class="bg-green-100 p-2 rounded-full">
+                                <i class="fas fa-keyboard text-green-600"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Sentences Card -->
+                    <div class="stat-card bg-purple-50 p-4 rounded-lg border border-purple-100">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-purple-800">Sentences</p>
+                                <p id="sentence-count" class="text-2xl font-bold text-purple-600">0</p>
+                            </div>
+                            <div class="bg-purple-100 p-2 rounded-full">
+                                <i class="fas fa-terminal text-purple-600"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Reading Time Card -->
+                    <div class="stat-card bg-amber-50 p-4 rounded-lg border border-amber-100">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-amber-800">Reading Time</p>
+                                <p id="reading-time" class="text-2xl font-bold text-amber-600">0s</p>
+                            </div>
+                            <div class="bg-amber-100 p-2 rounded-full">
+                                <i class="fas fa-clock text-amber-600"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Additional Stats -->
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h3 class="text-sm font-medium text-gray-700 mb-3">More Statistics</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        <div class="flex items-center">
+                            <div class="bg-gray-100 p-2 rounded-full mr-3">
+                                <i class="fas fa-paragraph text-gray-600"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500">Paragraphs</p>
+                                <p id="paragraph-count" class="text-sm font-medium text-gray-800">0</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="bg-gray-100 p-2 rounded-full mr-3">
+                                <i class="fas fa-long-arrow-alt-right text-gray-600"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500">Avg. Word Length</p>
+                                <p id="avg-word-length" class="text-sm font-medium text-gray-800">0</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="bg-gray-100 p-2 rounded-full mr-3">
+                                <i class="fas fa-space-shuttle text-gray-600"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500">Spaces</p>
+                                <p id="space-count" class="text-sm font-medium text-gray-800">0</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Footer -->
+            <div class="bg-gray-50 px-6 py-4 text-center border-t border-gray-200">
+                <p class="text-xs text-gray-500">Analyzes text in your browser - no data is sent to servers</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM Elements
+            const textInput = document.getElementById('text-input');
+            const wordCountEl = document.getElementById('word-count');
+            const charCountEl = document.getElementById('char-count');
+            const sentenceCountEl = document.getElementById('sentence-count');
+            const readingTimeEl = document.getElementById('reading-time');
+            const paragraphCountEl = document.getElementById('paragraph-count');
+            const avgWordLengthEl = document.getElementById('avg-word-length');
+            const spaceCountEl = document.getElementById('space-count');
+            const lastUpdatedEl = document.getElementById('last-updated');
+            const clearBtn = document.getElementById('clear-btn');
+            const sampleBtn = document.getElementById('sample-btn');
+            
+            // Sample text
+            const sampleText = `The word counter is a simple yet powerful tool for writers, students, and professionals. It analyzes your text in real-time, providing statistics about word count, character count, sentences, and more.
+
+This tool helps you understand the composition of your writing. For example, this sample text contains multiple sentences across different paragraphs. You can clear it and type your own text to see immediate analysis.
+
+Word counters are essential for meeting requirements like essay word limits, tweet character limits, or reading time estimates. The average reading speed is about 200 words per minute.`;
+            
+            // Initialize with sample text
+            textInput.value = sampleText;
+            analyzeText();
+            
+            // Analyze text on input
+            textInput.addEventListener('input', function() {
+                analyzeText();
+                updateLastUpdated();
+            });
+            
+            // Clear text
+            clearBtn.addEventListener('click', function() {
+                textInput.value = '';
+                analyzeText();
+            });
+            
+            // Load sample text
+            sampleBtn.addEventListener('click', function() {
+                textInput.value = sampleText;
+                analyzeText();
+            });
+            
+            // Update last updated timestamp
+            function updateLastUpdated() {
+                const now = new Date();
+                lastUpdatedEl.textContent = `Updated ${now.toLocaleTimeString()}`;
+            }
+            
+            // Main analysis function
+            function analyzeText() {
+                const text = textInput.value;
+                
+                // Character count (including spaces)
+                const charCount = text.length;
+                charCountEl.textContent = charCount.toLocaleString();
+                
+                // Character count (excluding spaces)
+                const charCountNoSpaces = text.replace(/\s/g, '').length;
+                
+                // Word count
+                const words = text.trim() === '' ? [] : text.trim().split(/\s+/);
+                const wordCount = words.length;
+                wordCountEl.textContent = wordCount.toLocaleString();
+                
+                // Sentence count (naive approach)
+                const sentences = text.trim() === '' ? [] : text.split(/[.!?]+/).filter(s => s.trim().length > 0);
+                const sentenceCount = sentences.length;
+                sentenceCountEl.textContent = sentenceCount.toLocaleString();
+                
+                // Paragraph count
+                const paragraphs = text.trim() === '' ? [] : text.split(/\n+/).filter(p => p.trim().length > 0);
+                const paragraphCount = paragraphs.length;
+                paragraphCountEl.textContent = paragraphCount.toLocaleString();
+                
+                // Space count
+                const spaceCount = (text.match(/\s/g) || []).length;
+                spaceCountEl.textContent = spaceCount.toLocaleString();
+                
+                // Average word length
+                const avgWordLength = wordCount > 0 ? 
+                    (words.join('').length / wordCount).toFixed(1) : 0;
+                avgWordLengthEl.textContent = avgWordLength;
+                
+                // Reading time (average 200 words per minute)
+                const readingTimeMinutes = wordCount / 200;
+                let readingTimeText;
+                
+                if (readingTimeMinutes < 1) {
+                    const seconds = Math.round(readingTimeMinutes * 60);
+                    readingTimeText = `${seconds}s`;
+                } else if (readingTimeMinutes < 60) {
+                    const minutes = Math.floor(readingTimeMinutes);
+                    const seconds = Math.round((readingTimeMinutes % 1) * 60);
+                    readingTimeText = `${minutes}m ${seconds}s`;
+                } else {
+                    const hours = Math.floor(readingTimeMinutes / 60);
+                    const minutes = Math.round(readingTimeMinutes % 60);
+                    readingTimeText = `${hours}h ${minutes}m`;
+                }
+                
+                readingTimeEl.textContent = readingTimeText;
+            }
+        });
+    </script>
+</body>
+</html>
